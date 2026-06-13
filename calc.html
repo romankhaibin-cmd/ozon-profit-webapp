@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ozon Profit Calc</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #fff; color: #000; }
+        input { width: 100%; padding: 10px; margin: 5px 0 15px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: #3390ec; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; }
+        .result { margin-top: 20px; padding: 15px; background: #f0f8ff; border-radius: 5px; display: none; }
+        .error { color: red; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+    <h2>💰 Калькулятор</h2>
+    <label>Цена (₽)</label>
+    <input type="number" id="price" value="2500">
+    
+    <label>Себестоимость (₽)</label>
+    <input type="number" id="cost" value="1200">
+    
+    <label>Вес (кг)</label>
+    <input type="number" id="weight" value="0.3" step="0.1">
+    
+    <button onclick="calculate()">Рассчитать</button>
+    
+    <div class="error" id="error"></div>
+    
+    <div class="result" id="result">
+        <p>Прибыль: <b id="res-profit"></b></p>
+        <p>Маржа: <b id="res-margin"></b></p>
+        <p>Комиссия: <b id="res-com"></b></p>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        async function calculate() {
+            const price = document.getElementById('price').value;
+            const cost = document.getElementById('cost').value;
+            const weight = document.getElementById('weight').value;
+            
+            const errorDiv = document.getElementById('error');
+            const resultDiv = document.getElementById('result');
+            
+            errorDiv.style.display = 'none';
+            resultDiv.style.display = 'none';
+
+            // ВСТАВЬТЕ СЮДА ВАШ PRODUCTION URL ИЗ NODUL (Узел #9)
+            // Он должен начинаться с /prod/
+            const url = 'https://webhook.nodul.ru/24648/prod/9d5ff094-8fbc-4465-9648-f6253efd1586';
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ price: Number(price), cost: Number(cost), weight: Number(weight) })
+                });
+
+                if (!response.ok) throw new Error('Ошибка сети');
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    document.getElementById('res-profit').innerText = data.profit + ' ₽';
+                    document.getElementById('res-margin').innerText = data.margin + '%';
+                    document.getElementById('res-com').innerText = data.commission + ' ₽';
+                    resultDiv.style.display = 'block';
+                } else {
+                    errorDiv.innerText = 'Ошибка расчета: ' + data.error;
+                    errorDiv.style.display = 'block';
+                }
+
+            } catch (e) {
+                errorDiv.innerText = 'Не удалось соединиться: ' + e.message;
+                errorDiv.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>
