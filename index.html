@@ -9,11 +9,7 @@
     <title>Ozon Profit Calculator</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        * { 
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
             padding: 16px; 
@@ -22,106 +18,36 @@
             font-size: 16px;
             min-height: 100vh;
         }
-        h2 { 
-            margin-bottom: 20px; 
-            font-size: 22px; 
-            font-weight: 700;
-        }
-        .form-group { 
-            margin-bottom: 16px; 
-        }
-        label { 
-            display: block; 
-            margin-bottom: 8px; 
-            font-weight: 600; 
-            font-size: 14px;
-            color: var(--tg-theme-text-color, #000000);
-        }
+        h2 { margin-bottom: 20px; font-size: 22px; font-weight: 700; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
         input { 
-            width: 100%; 
-            padding: 14px; 
-            border: 1px solid #e0e0e0; 
-            border-radius: 10px; 
-            font-size: 16px;
-            background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+            width: 100%; padding: 14px; border: 1px solid #e0e0e0; border-radius: 10px; 
+            font-size: 16px; background: var(--tg-theme-secondary-bg-color, #f5f5f5);
             color: var(--tg-theme-text-color, #000000);
-            -webkit-appearance: none;
-        }
-        input:focus {
-            outline: none;
-            border-color: var(--tg-theme-button-color, #3390ec);
         }
         button { 
-            width: 100%; 
-            padding: 16px; 
-            background: var(--tg-theme-button-color, #3390ec); 
-            color: var(--tg-theme-button-text-color, #ffffff);
-            border: none; 
-            border-radius: 10px; 
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 8px;
+            width: 100%; padding: 16px; background: var(--tg-theme-button-color, #3390ec); 
+            color: var(--tg-theme-button-text-color, #ffffff); border: none; border-radius: 10px; 
+            font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 8px;
         }
-        button:disabled { 
-            opacity: 0.6; 
-            cursor: not-allowed;
-        }
+        button:disabled { opacity: 0.6; }
         .result { 
-            margin-top: 20px; 
-            padding: 16px; 
-            background: var(--tg-theme-secondary-bg-color, #f0f7ff); 
-            border-radius: 12px;
-            border: 1px solid #e0e0e0;
+            margin-top: 20px; padding: 16px; background: var(--tg-theme-secondary-bg-color, #f0f7ff); 
+            border-radius: 12px; border: 1px solid #e0e0e0;
         }
-        .result-item { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-            margin-bottom: 12px;
-            font-size: 15px;
+        .result-item { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px; }
+        .result-item:last-child { margin-bottom: 0; }
+        .profit-value { color: #28a745; font-size: 18px; font-weight: 700; }
+        .loading { text-align: center; padding: 20px; display: none; }
+        .error { 
+            margin-top: 16px; padding: 12px; background: #ffebee; 
+            border: 1px solid #f44336; border-radius: 8px; color: #c62828; display: none;
         }
-        .result-item:last-child {
-            margin-bottom: 0;
-        }
-        .result-label {
-            color: var(--tg-theme-text-color, #000000);
-            font-weight: 500;
-        }
-        .result-value { 
-            font-weight: 700;
-            color: var(--tg-theme-text-color, #000000);
-        }
-        .profit-value { 
-            color: #28a745; 
-            font-size: 18px;
-        }
-        .loading { 
-            text-align: center; 
-            padding: 20px;
-            color: var(--tg-theme-hint-color, #999999);
-            display: none; 
-        }
-        .error {
-            margin-top: 16px;
-            padding: 12px;
-            background: #ffebee;
-            border: 1px solid #f44336;
-            border-radius: 8px;
-            color: #c62828;
-            font-size: 14px;
-            display: none;
-        }
-        .debug {
-            margin-top: 16px;
-            padding: 12px;
-            background: #fff3e0;
-            border: 1px solid #ff9800;
-            border-radius: 8px;
-            font-size: 12px;
-            font-family: monospace;
-            display: none;
-            word-break: break-all;
+        .debug { 
+            margin-top: 16px; padding: 12px; background: #fff3e0; 
+            border: 1px solid #ff9800; border-radius: 8px; font-size: 12px; 
+            font-family: monospace; display: none; word-break: break-all;
         }
     </style>
 </head>
@@ -146,36 +72,36 @@
     <button onclick="calculateProfit()" id="calcBtn">Рассчитать прибыль</button>
     
     <div class="loading" id="loading">⏳ Считаем...</div>
-    
     <div class="error" id="error"></div>
     <div class="debug" id="debug"></div>
     
     <div class="result" id="result" style="display: none;">
         <div class="result-item">
-            <span class="result-label">Прибыль:</span>
-            <span class="result-value profit-value" id="profitValue">0 ₽</span>
+            <span>Прибыль:</span>
+            <span class="profit-value" id="profitValue">0 ₽</span>
         </div>
         <div class="result-item">
-            <span class="result-label">Маржинальность:</span>
-            <span class="result-value" id="marginValue">0%</span>
+            <span>Маржинальность:</span>
+            <span id="marginValue">0%</span>
         </div>
         <div class="result-item">
-            <span class="result-label">Комиссия Ozon:</span>
-            <span class="result-value" id="commissionValue">0 ₽</span>
+            <span>Комиссия Ozon:</span>
+            <span id="commissionValue">0 ₽</span>
         </div>
     </div>
 
     <script>
+        // Инициализация Telegram WebApp
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.ready();
 
-        // ⚠️ ВАЖНО: Замените на ваш Production URL из Nodul!
-        const NODUL_WEBHOOK_URL = 'https://webhook.nodul.ru/24648/dev/9d5ff094-8fbc-4465-9648-f6253efd1586';
+        // ⚠️ ВАЖНО: Вставьте ваш Development URL из Nodul
+        const NODUL_WEBHOOK_URL = 'https://webhook.nodul.ru/24648/prod/9d5ff094-8fbc-4465-9648-f6253efd1586';
 
         function showError(message) {
             const errorDiv = document.getElementById('error');
-            errorDiv.textContent = message;
+            errorDiv.textContent = '❌ ' + message;
             errorDiv.style.display = 'block';
         }
 
@@ -230,7 +156,6 @@
                 });
 
                 const text = await response.text();
-                
                 showDebug('📥 Ответ (' + response.status + '):\n' + text);
 
                 if (!response.ok) {
@@ -241,7 +166,7 @@
                 try {
                     data = JSON.parse(text);
                 } catch (e) {
-                    throw new Error('Неверный формат ответа сервера');
+                    throw new Error('Неверный формат ответа');
                 }
 
                 if (data.status === 'success') {
@@ -250,12 +175,12 @@
                     document.getElementById('commissionValue').textContent = data.commission.toFixed(0) + ' ₽';
                     document.getElementById('result').style.display = 'block';
                 } else {
-                    throw new Error(data.error || data.details || 'Неизвестная ошибка');
+                    throw new Error(data.error || 'Неизвестная ошибка');
                 }
 
             } catch (error) {
                 console.error('Ошибка:', error);
-                showError('❌ ' + error.message);
+                showError(error.message);
             } finally {
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('calcBtn').disabled = false;
