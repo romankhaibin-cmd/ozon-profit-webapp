@@ -2,178 +2,65 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ozon Profit Calc</title>
     <style>
-        * {
-            box-sizing: border-box;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            padding: 20px;
-            background: #ffffff;
-            color: #000000;
-            margin: 0;
-        }
-        h2 {
-            margin-top: 0;
-            font-size: 24px;
-        }
-        label {
-            font-weight: 500;
-            display: block;
-            margin-top: 12px;
-        }
-        input {
-            width: 100%;
-            padding: 12px;
-            margin-top: 5px;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            font-size: 16px;
-            background: #f9f9f9;
-        }
-        button {
-            width: 100%;
-            padding: 14px;
-            margin-top: 24px;
-            background: #3390ec;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        button:active {
-            background: #2670b5;
-        }
-        .result {
-            margin-top: 20px;
-            padding: 16px;
-            background: #f0f8ff;
-            border-radius: 12px;
-            display: none;
-            border-left: 5px solid #3390ec;
-        }
-        .result p {
-            margin: 8px 0;
-            font-size: 18px;
-        }
-        .error {
-            color: #d32f2f;
-            margin-top: 16px;
-            padding: 12px;
-            background: #ffebee;
-            border-radius: 10px;
-            display: none;
-            font-weight: 500;
-        }
-        .footer {
-            font-size: 12px;
-            color: #888;
-            text-align: center;
-            margin-top: 30px;
-        }
+        body { font-family: sans-serif; padding: 20px; background: #fff; }
+        input { width: 100%; padding: 10px; margin: 5px 0 15px; border: 1px solid #ccc; border-radius: 5px; }
+        button { width: 100%; padding: 15px; background: #3390ec; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; }
+        .result { margin-top: 20px; padding: 15px; background: #f0f8ff; border-radius: 5px; display: none; }
+        .error { color: red; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
+    <h2>💰 Калькулятор</h2>
+    <label>Цена (₽)</label>
+    <input type="number" id="price" value="2500">
+    <label>Себестоимость (₽)</label>
+    <input type="number" id="cost" value="1200">
+    <label>Вес (кг)</label>
+    <input type="number" id="weight" value="0.3" step="0.1">
+    <button onclick="calculate()">Рассчитать</button>
+    <div class="error" id="error"></div>
+    <div class="result" id="result">
+        <p>Прибыль: <b id="res-profit"></b> ₽</p>
+        <p>Маржа: <b id="res-margin"></b> %</p>
+        <p>Комиссия: <b id="res-com"></b> ₽</p>
+    </div>
+    <script>
+        const WEBHOOK_URL = 'https://webhook.nodul.ru/24648/prod/9d5ff094-8fbc-4465-9648-f6253efd1586';
 
-<h2>💰 Калькулятор Ozon</h2>
+        async function calculate() {
+            const price = document.getElementById('price').value;
+            const cost = document.getElementById('cost').value;
+            const weight = document.getElementById('weight').value;
+            const errorDiv = document.getElementById('error');
+            const resultDiv = document.getElementById('result');
+            errorDiv.style.display = 'none';
+            resultDiv.style.display = 'none';
 
-<label>Цена (₽)</label>
-<input type="number" id="price" value="2500" step="any">
-
-<label>Себестоимость (₽)</label>
-<input type="number" id="cost" value="1200" step="any">
-
-<label>Вес (кг)</label>
-<input type="number" id="weight" value="0.3" step="0.1">
-
-<button onclick="calculate()">Рассчитать</button>
-
-<div class="error" id="error"></div>
-
-<div class="result" id="result">
-    <p>📈 Прибыль: <b id="res-profit"></b> ₽</p>
-    <p>📊 Маржинальность: <b id="res-margin"></b> %</p>
-    <p>🧾 Комиссия Ozon: <b id="res-com"></b> ₽</p>
-    <p>🚚 Логистика: <b id="res-logistics"></b> ₽</p>
-</div>
-
-<div class="footer">Данные округлены, комиссия 19%, логистика от веса</div>
-
-<script>
-    // ВАШ PRODUCTION URL (проверьте, что он начинается с /prod/ и хэш правильный)
-    const WEBHOOK_URL = 'https://webhook.nodul.ru/24648/prod/9d5ff094-8fbc-4465-9648-f6253efd1586';
-
-    async function calculate() {
-        const price = document.getElementById('price').value;
-        const cost = document.getElementById('cost').value;
-        const weight = document.getElementById('weight').value;
-
-        const errorDiv = document.getElementById('error');
-        const resultDiv = document.getElementById('result');
-
-        // Скрываем старые сообщения
-        errorDiv.style.display = 'none';
-        resultDiv.style.display = 'none';
-
-        // Валидация
-        if (price <= 0 || cost < 0 || weight <= 0) {
-            errorDiv.innerText = 'Пожалуйста, введите корректные значения (цена > 0, вес > 0)';
-            errorDiv.style.display = 'block';
-            return;
-        }
-
-        try {
-            const response = await fetch(WEBHOOK_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    price: Number(price),
-                    cost: Number(cost),
-                    weight: Number(weight)
-                })
-            });
-
-            // Если ответ не 200 OK — показываем ошибку
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Сервер вернул ${response.status}: ${errorText.substring(0, 100)}`);
-            }
-
-            const data = await response.json();
-
-            // Ожидаемая структура ответа от Nodul: { status, profit, commission, margin, logistics }
-            if (data && data.status === 'success') {
-                document.getElementById('res-profit').innerText = data.profit;
-                document.getElementById('res-margin').innerText = data.margin;
-                document.getElementById('res-com').innerText = data.commission;
-                document.getElementById('res-logistics').innerText = data.logistics;
-                resultDiv.style.display = 'block';
-            } else {
-                // Если ответ пришёл, но не соответствует ожидаемому формату
-                errorDiv.innerText = 'Неожиданный формат ответа от сервера.';
+            try {
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ price: Number(price), cost: Number(cost), weight: Number(weight) })
+                });
+                if (!response.ok) throw new Error(`Ошибка ${response.status}`);
+                const data = await response.json();
+                if (data.status === 'success') {
+                    document.getElementById('res-profit').innerText = data.profit;
+                    document.getElementById('res-margin').innerText = data.margin;
+                    document.getElementById('res-com').innerText = data.commission;
+                    resultDiv.style.display = 'block';
+                } else {
+                    errorDiv.innerText = 'Ошибка расчета';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (e) {
+                errorDiv.innerText = 'Не удалось соединиться: ' + e.message;
                 errorDiv.style.display = 'block';
-                console.error('Ответ сервера:', data);
             }
-
-        } catch (err) {
-            console.error('Fetch error:', err);
-            errorDiv.innerText = 'Не удалось соединиться: ' + err.message;
-            errorDiv.style.display = 'block';
         }
-    }
-
-    // Небольшой фикс для корректного отображения на мобильных устройствах (Telegram WebView)
-    if (window.Telegram && Telegram.WebApp) {
-        Telegram.WebApp.ready();
-        Telegram.WebApp.expand();
-    }
-</script>
+    </script>
 </body>
 </html>
