@@ -4,24 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ozon Profit Calculator</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
             padding: 16px; 
-            background: #ffffff; 
-            color: #000000;
+            background: var(--tg-theme-bg-color, #fff); 
+            color: var(--tg-theme-text-color, #000);
         }
         h2 { margin-bottom: 20px; font-size: 22px; }
         .form-group { margin-bottom: 16px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; }
         input { 
             width: 100%; padding: 14px; border: 1px solid #e0e0e0; 
             border-radius: 10px; font-size: 16px;
-        }
-        input:focus {
-            outline: none;
-            border-color: #3390ec;
         }
         button { 
             width: 100%; padding: 16px; background: #3390ec; 
@@ -44,78 +41,108 @@
             position: relative;
             display: inline-block;
             cursor: help;
-            margin-left: 8px;
+            margin-left: 6px;
             color: #666;
             font-size: 14px;
+            border-bottom: 1px dotted #999;
         }
-        .tooltip:hover::after {
+        .tooltip:hover::after,
+        .tooltip:active::after {
             content: attr(data-tooltip);
             position: absolute;
-            bottom: 100%;
+            bottom: 125%;
             left: 50%;
             transform: translateX(-50%);
             background: #333;
             color: #fff;
-            padding: 8px 12px;
-            border-radius: 6px;
+            padding: 10px 14px;
+            border-radius: 8px;
             font-size: 12px;
-            white-space: nowrap;
-            z-index: 1000;
-            margin-bottom: 5px;
-            max-width: 250px;
             white-space: normal;
-            text-align: center;
+            z-index: 1000;
+            min-width: 220px;
+            max-width: 280px;
+            text-align: left;
+            line-height: 1.4;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         .auto-calc {
             font-size: 12px;
             color: #666;
             margin-top: 4px;
         }
+        .loading { text-align: center; padding: 20px; display: none; }
+        .error { 
+            margin-top: 16px; padding: 12px; background: #ffebee; 
+            border: 1px solid #f44336; border-radius: 8px; 
+            color: #c62828; display: none;
+        }
     </style>
 </head>
 <body>
-    <h2>💰 Калькулятор Ozon</h2>
+    <h2>💰 Калькулятор прибыли</h2>
     
     <div class="form-group">
         <label for="price">Цена продажи (₽)</label>
-        <input type="number" id="price" placeholder="2500" oninput="autoCalculate()">
+        <input type="number" id="price" placeholder="2500">
     </div>
     
     <div class="form-group">
         <label for="cost">Себестоимость (₽)</label>
-        <input type="number" id="cost" placeholder="1200" oninput="autoCalculate()">
+        <input type="number" id="cost" placeholder="1200">
     </div>
     
     <div class="form-group">
         <label for="weight">Вес (кг)</label>
-        <input type="number" id="weight" placeholder="0.3" step="0.1" oninput="updateLogistics()">
-        <div class="auto-calc">Логистика рассчитывается автоматически</div>
+        <input type="number" id="weight" placeholder="0.3" step="0.1">
+        <div class="auto-calc">Логистика: до 0.5 кг — 80 ₽, свыше — 120 ₽</div>
     </div>
     
     <div class="form-group">
         <label for="commission">Комиссия Ozon (%)</label>
-        <input type="number" id="commission" value="19" step="0.1" oninput="autoCalculate()">
+        <input type="number" id="commission" value="19" step="0.1">
         <div class="auto-calc">По умолчанию 19%, можно изменить</div>
     </div>
     
     <div class="form-group">
         <label for="logistics">Логистика (₽)</label>
-        <input type="number" id="logistics" placeholder="120" oninput="autoCalculate()">
-        <div class="auto-calc">Рассчитывается автоматически по весу, можно изменить</div>
+        <input type="number" id="logistics" placeholder="120">
+        <div class="auto-calc">Рассчитывается автоматически по весу, можно изменить вручную</div>
     </div>
     
-    <button onclick="calculateProfit()">Рассчитать прибыль</button>
+    <button onclick="calculateProfit()" id="calcBtn">Рассчитать прибыль</button>
+    
+    <div class="loading" id="loading">⏳ Считаем...</div>
+    <div class="error" id="error"></div>
     
     <div class="result" id="result" style="display: none;">
         <div class="result-item">
-            <span>Прибыль:</span>
+            <span>
+                Прибыль
+                <span class="tooltip" data-tooltip="Формула расчета прибыли:
+
+Прибыль = Цена − Себестоимость − Комиссия Ozon − Логистика
+
+Где:
+• Комиссия Ozon = Цена × (Комиссия% ÷ 100)
+• Логистика = 80 ₽ (до 0.5 кг) или 120 ₽ (свыше)
+
+Пример: 2500 − 1200 − 475 − 80 = 745 ₽">ℹ️</span>
+            </span>
             <span class="profit-value" id="profitValue">0 ₽</span>
         </div>
         <div class="result-item">
             <span>
                 Маржинальность
-                <span class="tooltip" data-tooltip="Маржинальность = (Прибыль ÷ Цена продажи) × 100%
-Показывает процент прибыли от цены продажи">ℹ️</span>
+                <span class="tooltip" data-tooltip="Формула маржинальности:
+
+Маржа = (Прибыль ÷ Цена продажи) × 100%
+
+Показывает, какой процент от цены составляет чистая прибыль.
+
+Пример: (745 ÷ 2500) × 100 = 29.8%
+
+⚠️ Если маржа отрицательная — вы работаете в убыток!">ℹ️</span>
             </span>
             <span id="marginValue">0%</span>
         </div>
@@ -130,33 +157,32 @@
     </div>
 
     <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+
         // Автоматический расчет логистики при изменении веса
         function updateLogistics() {
             const weight = parseFloat(document.getElementById('weight').value) || 0.3;
             const logistics = weight <= 0.5 ? 80 : 120;
             document.getElementById('logistics').value = logistics;
-            autoCalculate();
         }
 
-        // Автоматический пересчет при изменении любого поля
-        function autoCalculate() {
-            const price = document.getElementById('price').value;
-            const cost = document.getElementById('cost').value;
-            
-            if (price && cost) {
-                calculateProfit();
-            }
-        }
-
-        // Основной расчет
+        // Основной расчет — ТОЛЬКО по кнопке
         function calculateProfit() {
             const price = parseFloat(document.getElementById('price').value) || 0;
             const cost = parseFloat(document.getElementById('cost').value) || 0;
             const weight = parseFloat(document.getElementById('weight').value) || 0.3;
             const commissionRate = parseFloat(document.getElementById('commission').value) / 100 || 0.19;
-            const logistics = parseFloat(document.getElementById('logistics').value) || (weight <= 0.5 ? 80 : 120);
+            
+            // Если логистика не задана вручную — считаем автоматически
+            let logistics = parseFloat(document.getElementById('logistics').value);
+            if (isNaN(logistics) || logistics === 0) {
+                logistics = weight <= 0.5 ? 80 : 120;
+            }
 
             if (price <= 0 || cost <= 0) {
+                tg.showAlert('Введите цену и себестоимость!');
                 return;
             }
 
@@ -169,8 +195,16 @@
             document.getElementById('commissionValue').textContent = commission.toFixed(0) + ' ₽';
             document.getElementById('logisticsValue').textContent = logistics + ' ₽';
             document.getElementById('result').style.display = 'block';
+            
+            // Вибрация при успехе (если поддерживается)
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
         }
 
+        // Слушатель на поле веса для автоподстановки логистики
+        document.getElementById('weight').addEventListener('input', updateLogistics);
+        
         // Инициализация при загрузке
         window.onload = function() {
             updateLogistics();
