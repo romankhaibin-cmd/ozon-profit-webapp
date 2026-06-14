@@ -4,17 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Калькулятор Ozon</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
-            font-family: -apple-system, sans-serif; padding: 16px; 
-            background: var(--tg-theme-bg-color, #fff); 
-            color: var(--tg-theme-text-color, #000);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            padding: 16px; 
+            background: #ffffff; 
+            color: #000000;
         }
         h2 { margin-bottom: 20px; font-size: 22px; text-align: center; }
         .form-group { margin-bottom: 16px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
         input { 
             width: 100%; padding: 14px; border: 1px solid #e0e0e0; 
             border-radius: 10px; font-size: 16px;
@@ -27,18 +27,14 @@
         button:disabled { opacity: 0.6; }
         .result { 
             margin-top: 20px; padding: 16px; background: #f0f7ff; 
-            border-radius: 12px;
+            border-radius: 12px; border: 1px solid #e0e0e0;
         }
         .result-item { 
             display: flex; justify-content: space-between; 
             margin-bottom: 12px; font-size: 15px; 
         }
+        .result-item:last-child { margin-bottom: 0; }
         .profit-value { color: #28a745; font-size: 18px; font-weight: 700; }
-        .error { 
-            margin-top: 16px; padding: 12px; background: #ffebee; 
-            border: 1px solid #f44336; border-radius: 8px; 
-            color: #c62828; display: none;
-        }
     </style>
 </head>
 <body>
@@ -61,8 +57,50 @@
     
     <button onclick="calculateProfit()" id="calcBtn">Рассчитать прибыль</button>
     
-    <div class="error" id="error"></div>
-    
     <div class="result" id="result" style="display: none;">
         <div class="result-item">
-            <span>При
+            <span>Прибыль:</span>
+            <span class="profit-value" id="profitValue">0 ₽</span>
+        </div>
+        <div class="result-item">
+            <span>Маржинальность:</span>
+            <span id="marginValue">0%</span>
+        </div>
+        <div class="result-item">
+            <span>Комиссия Ozon (19%):</span>
+            <span id="commissionValue">0 ₽</span>
+        </div>
+        <div class="result-item">
+            <span>Логистика:</span>
+            <span id="logisticsValue">0 ₽</span>
+        </div>
+    </div>
+
+    <script>
+        function calculateProfit() {
+            const price = parseFloat(document.getElementById('price').value) || 0;
+            const cost = parseFloat(document.getElementById('cost').value) || 0;
+            const weight = parseFloat(document.getElementById('weight').value) || 0.3;
+
+            if (price <= 0 || cost <= 0) {
+                alert('Введите цену и себестоимость!');
+                return;
+            }
+
+            // Расчет
+            const commissionRate = 0.19;
+            const commission = price * commissionRate;
+            const logistics = weight <= 0.5 ? 80 : 120;
+            const profit = price - cost - commission - logistics;
+            const margin = price > 0 ? ((profit / price) * 100).toFixed(1) : 0;
+
+            // Вывод
+            document.getElementById('profitValue').textContent = profit.toFixed(0) + ' ₽';
+            document.getElementById('marginValue').textContent = margin + '%';
+            document.getElementById('commissionValue').textContent = commission.toFixed(0) + ' ₽';
+            document.getElementById('logisticsValue').textContent = logistics + ' ₽';
+            document.getElementById('result').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
