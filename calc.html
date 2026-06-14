@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <title>Ozon Profit Calculator</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
-            font-family: -apple-system, sans-serif; padding: 16px; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            padding: 16px; 
             background: var(--tg-theme-bg-color, #fff); 
             color: var(--tg-theme-text-color, #000);
         }
@@ -27,14 +27,59 @@
         }
         button:disabled { opacity: 0.6; }
         .result { 
-            margin-top: 20px; padding: 16px; background: #f0f7ff; 
+            margin-top: 20px; 
+            padding: 16px; 
+            background: var(--tg-theme-secondary-bg-color, #e3f2fd); 
             border-radius: 12px;
+            border: 2px solid #3390ec;
+            color: var(--tg-theme-text-color, #000);
         }
         .result-item { 
             display: flex; justify-content: space-between; 
             margin-bottom: 12px; font-size: 15px; 
+            align-items: center;
+            color: var(--tg-theme-text-color, #000);
         }
+        .result-item:last-child { margin-bottom: 0; }
         .profit-value { color: #28a745; font-size: 18px; font-weight: 700; }
+        #marginValue, #commissionValue, #logisticsValue {
+            font-weight: 600;
+            color: var(--tg-theme-text-color, #000);
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+            margin-left: 6px;
+            color: #666;
+            font-size: 14px;
+            border-bottom: 1px dotted #999;
+        }
+        .tooltip:hover::after,
+        .tooltip:active::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            white-space: normal;
+            z-index: 1000;
+            min-width: 220px;
+            max-width: 280px;
+            text-align: left;
+            line-height: 1.4;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .auto-calc {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
         .loading { text-align: center; padding: 20px; display: none; }
         .error { 
             margin-top: 16px; padding: 12px; background: #ffebee; 
@@ -59,6 +104,19 @@
     <div class="form-group">
         <label for="weight">Вес (кг)</label>
         <input type="number" id="weight" placeholder="0.3" step="0.1">
+        <div class="auto-calc">Логистика: до 0.5 кг — 80 ₽, свыше — 120 ₽</div>
+    </div>
+    
+    <div class="form-group">
+        <label for="commission">Комиссия Ozon (%)</label>
+        <input type="number" id="commission" value="19" step="0.1">
+        <div class="auto-calc">По умолчанию 19%, можно изменить</div>
+    </div>
+    
+    <div class="form-group">
+        <label for="logistics">Логистика (₽)</label>
+        <input type="number" id="logistics" placeholder="120">
+        <div class="auto-calc">Рассчитывается автоматически по весу, можно изменить вручную</div>
     </div>
     
     <button onclick="calculateProfit()" id="calcBtn">Рассчитать прибыль</button>
@@ -68,16 +126,42 @@
     
     <div class="result" id="result" style="display: none;">
         <div class="result-item">
-            <span>Прибыль:</span>
+            <span>
+                Прибыль
+                <span class="tooltip" data-tooltip="Формула расчета прибыли:
+
+Прибыль = Цена − Себестоимость − Комиссия Ozon − Логистика
+
+Где:
+• Комиссия Ozon = Цена × (Комиссия% ÷ 100)
+• Логистика = 80 ₽ (до 0.5 кг) или 120 ₽ (свыше)
+
+Пример: 2500 − 1200 − 475 − 80 = 745 ₽">ℹ️</span>
+            </span>
             <span class="profit-value" id="profitValue">0 ₽</span>
         </div>
         <div class="result-item">
-            <span>Маржинальность:</span>
+            <span>
+                Маржинальность
+                <span class="tooltip" data-tooltip="Формула маржинальности:
+
+Маржа = (Прибыль ÷ Цена продажи) × 100%
+
+Показывает, какой процент от цены составляет чистая прибыль.
+
+Пример: (745 ÷ 2500) × 100 = 29.8%
+
+⚠️ Если маржа отрицательная — вы работаете в убыток!">ℹ️</span>
+            </span>
             <span id="marginValue">0%</span>
         </div>
         <div class="result-item">
             <span>Комиссия Ozon:</span>
             <span id="commissionValue">0 ₽</span>
+        </div>
+        <div class="result-item">
+            <span>Логистика:</span>
+            <span id="logisticsValue">0 ₽</span>
         </div>
     </div>
 
@@ -86,71 +170,54 @@
         tg.expand();
         tg.ready();
 
-        const NODUL_WEBHOOK_URL = 'https://webhook.nodul.ru/24648/dev/9d5ff094-8fbc-4465-9648-f6253efd1586';
-
-        function showError(message) {
-            const errorDiv = document.getElementById('error');
-            errorDiv.textContent = '❌ ' + message;
-            errorDiv.style.display = 'block';
+        // Автоматический расчет логистики при изменении веса
+        function updateLogistics() {
+            const weight = parseFloat(document.getElementById('weight').value) || 0.3;
+            const logistics = weight <= 0.5 ? 80 : 120;
+            document.getElementById('logistics').value = logistics;
         }
 
-        function hideMessages() {
-            document.getElementById('error').style.display = 'none';
-        }
-
-        async function calculateProfit() {
-            hideMessages();
+        // Основной расчет — ТОЛЬКО по кнопке
+        function calculateProfit() {
+            const price = parseFloat(document.getElementById('price').value) || 0;
+            const cost = parseFloat(document.getElementById('cost').value) || 0;
+            const weight = parseFloat(document.getElementById('weight').value) || 0.3;
+            const commissionRate = parseFloat(document.getElementById('commission').value) / 100 || 0.19;
             
-            const price = document.getElementById('price').value;
-            const cost = document.getElementById('cost').value;
-            const weight = document.getElementById('weight').value;
+            // Если логистика не задана вручную — считаем автоматически
+            let logistics = parseFloat(document.getElementById('logistics').value);
+            if (isNaN(logistics) || logistics === 0) {
+                logistics = weight <= 0.5 ? 80 : 120;
+            }
 
-            if (!price || !cost) {
+            if (price <= 0 || cost <= 0) {
                 tg.showAlert('Введите цену и себестоимость!');
                 return;
             }
 
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('result').style.display = 'none';
-            document.getElementById('calcBtn').disabled = true;
+            const commission = price * commissionRate;
+            const profit = price - cost - commission - logistics;
+            const margin = price > 0 ? ((profit / price) * 100).toFixed(1) : 0;
 
-            try {
-                const response = await fetch(NODUL_WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'calculate',
-                        price: parseFloat(price),
-                        cost: parseFloat(cost),
-                        weight: parseFloat(weight) || 0.3
-                    }),
-                    mode: 'cors'
-                });
-
-                const text = await response.text();
-
-                if (!response.ok) {
-                    throw new Error('HTTP ' + response.status);
-                }
-
-                const data = JSON.parse(text);
-
-                if (data.status === 'success') {
-                    document.getElementById('profitValue').textContent = data.profit.toFixed(0) + ' ₽';
-                    document.getElementById('marginValue').textContent = data.margin + '%';
-                    document.getElementById('commissionValue').textContent = data.commission.toFixed(0) + ' ₽';
-                    document.getElementById('result').style.display = 'block';
-                } else {
-                    throw new Error(data.error || 'Ошибка');
-                }
-
-            } catch (error) {
-                showError(error.message);
-            } finally {
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('calcBtn').disabled = false;
+            document.getElementById('profitValue').textContent = profit.toFixed(0) + ' ₽';
+            document.getElementById('marginValue').textContent = margin + '%';
+            document.getElementById('commissionValue').textContent = commission.toFixed(0) + ' ₽';
+            document.getElementById('logisticsValue').textContent = logistics + ' ₽';
+            document.getElementById('result').style.display = 'block';
+            
+            // Вибрация при успехе (если поддерживается)
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
             }
         }
+
+        // Слушатель на поле веса для автоподстановки логистики
+        document.getElementById('weight').addEventListener('input', updateLogistics);
+        
+        // Инициализация при загрузке
+        window.onload = function() {
+            updateLogistics();
+        };
     </script>
 </body>
 </html>
