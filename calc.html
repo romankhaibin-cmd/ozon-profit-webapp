@@ -28,19 +28,12 @@
     <div class="error" id="error"></div>
     
     <div class="result" id="result">
-        <p>Прибыль: <b id="res-profit"></b></p>
-        <p>Маржа: <b id="res-margin"></b></p>
-        <p>Комиссия: <b id="res-com"></b></p>
+        <p>Прибыль: <b id="res-profit"></b> ₽</p>
+        <p>Маржа: <b id="res-margin"></b> %</p>
+        <p>Комиссия: <b id="res-com"></b> ₽</p>
     </div>
 
     <script>
-        // Заглушка для Telegram WebApp (чтобы не было ошибки при открытии в браузере)
-        if (typeof window.Telegram === 'undefined') {
-            window.Telegram = { WebApp: { ready: () => {}, expand: () => {} } };
-        }
-        Telegram.WebApp.ready();
-        Telegram.WebApp.expand();
-
         async function calculate() {
             const price = document.getElementById('price').value;
             const cost = document.getElementById('cost').value;
@@ -61,14 +54,17 @@
                     body: JSON.stringify({ price: Number(price), cost: Number(cost), weight: Number(weight) })
                 });
 
-                if (!response.ok) throw new Error('Ошибка сети: ' + response.status);
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(`Ошибка ${response.status}: ${text}`);
+                }
                 
                 const data = await response.json();
                 
                 if (data.status === 'success') {
-                    document.getElementById('res-profit').innerText = data.profit + ' ₽';
-                    document.getElementById('res-margin').innerText = data.margin + '%';
-                    document.getElementById('res-com').innerText = data.commission + ' ₽';
+                    document.getElementById('res-profit').innerText = data.profit;
+                    document.getElementById('res-margin').innerText = data.margin;
+                    document.getElementById('res-com').innerText = data.commission;
                     resultDiv.style.display = 'block';
                 } else {
                     errorDiv.innerText = 'Ошибка расчета: ' + (data.error || 'неизвестная ошибка');
