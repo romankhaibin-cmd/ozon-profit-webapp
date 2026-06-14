@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Калькулятор Ozon</title>
+    <title>Ozon Profit Calculator</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
@@ -12,12 +12,16 @@
             background: #ffffff; 
             color: #000000;
         }
-        h2 { margin-bottom: 20px; font-size: 22px; text-align: center; }
+        h2 { margin-bottom: 20px; font-size: 22px; }
         .form-group { margin-bottom: 16px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
         input { 
             width: 100%; padding: 14px; border: 1px solid #e0e0e0; 
             border-radius: 10px; font-size: 16px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #3390ec;
         }
         button { 
             width: 100%; padding: 16px; background: #3390ec; 
@@ -27,35 +31,80 @@
         button:disabled { opacity: 0.6; }
         .result { 
             margin-top: 20px; padding: 16px; background: #f0f7ff; 
-            border-radius: 12px; border: 1px solid #e0e0e0;
+            border-radius: 12px;
         }
         .result-item { 
             display: flex; justify-content: space-between; 
             margin-bottom: 12px; font-size: 15px; 
+            align-items: center;
         }
         .result-item:last-child { margin-bottom: 0; }
         .profit-value { color: #28a745; font-size: 18px; font-weight: 700; }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+            margin-left: 8px;
+            color: #666;
+            font-size: 14px;
+        }
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            margin-bottom: 5px;
+            max-width: 250px;
+            white-space: normal;
+            text-align: center;
+        }
+        .auto-calc {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body>
     <h2>💰 Калькулятор Ozon</h2>
     
     <div class="form-group">
-        <label>Цена продажи (₽)</label>
-        <input type="number" id="price" placeholder="2500">
+        <label for="price">Цена продажи (₽)</label>
+        <input type="number" id="price" placeholder="2500" oninput="autoCalculate()">
     </div>
     
     <div class="form-group">
-        <label>Себестоимость (₽)</label>
-        <input type="number" id="cost" placeholder="1200">
+        <label for="cost">Себестоимость (₽)</label>
+        <input type="number" id="cost" placeholder="1200" oninput="autoCalculate()">
     </div>
     
     <div class="form-group">
-        <label>Вес (кг)</label>
-        <input type="number" id="weight" placeholder="0.3" step="0.1">
+        <label for="weight">Вес (кг)</label>
+        <input type="number" id="weight" placeholder="0.3" step="0.1" oninput="updateLogistics()">
+        <div class="auto-calc">Логистика рассчитывается автоматически</div>
     </div>
     
-    <button onclick="calculateProfit()" id="calcBtn">Рассчитать прибыль</button>
+    <div class="form-group">
+        <label for="commission">Комиссия Ozon (%)</label>
+        <input type="number" id="commission" value="19" step="0.1" oninput="autoCalculate()">
+        <div class="auto-calc">По умолчанию 19%, можно изменить</div>
+    </div>
+    
+    <div class="form-group">
+        <label for="logistics">Логистика (₽)</label>
+        <input type="number" id="logistics" placeholder="120" oninput="autoCalculate()">
+        <div class="auto-calc">Рассчитывается автоматически по весу, можно изменить</div>
+    </div>
+    
+    <button onclick="calculateProfit()">Рассчитать прибыль</button>
     
     <div class="result" id="result" style="display: none;">
         <div class="result-item">
@@ -63,11 +112,15 @@
             <span class="profit-value" id="profitValue">0 ₽</span>
         </div>
         <div class="result-item">
-            <span>Маржинальность:</span>
+            <span>
+                Маржинальность
+                <span class="tooltip" data-tooltip="Маржинальность = (Прибыль ÷ Цена продажи) × 100%
+Показывает процент прибыли от цены продажи">ℹ️</span>
+            </span>
             <span id="marginValue">0%</span>
         </div>
         <div class="result-item">
-            <span>Комиссия Ozon (19%):</span>
+            <span>Комиссия Ozon:</span>
             <span id="commissionValue">0 ₽</span>
         </div>
         <div class="result-item">
@@ -77,30 +130,51 @@
     </div>
 
     <script>
+        // Автоматический расчет логистики при изменении веса
+        function updateLogistics() {
+            const weight = parseFloat(document.getElementById('weight').value) || 0.3;
+            const logistics = weight <= 0.5 ? 80 : 120;
+            document.getElementById('logistics').value = logistics;
+            autoCalculate();
+        }
+
+        // Автоматический пересчет при изменении любого поля
+        function autoCalculate() {
+            const price = document.getElementById('price').value;
+            const cost = document.getElementById('cost').value;
+            
+            if (price && cost) {
+                calculateProfit();
+            }
+        }
+
+        // Основной расчет
         function calculateProfit() {
             const price = parseFloat(document.getElementById('price').value) || 0;
             const cost = parseFloat(document.getElementById('cost').value) || 0;
             const weight = parseFloat(document.getElementById('weight').value) || 0.3;
+            const commissionRate = parseFloat(document.getElementById('commission').value) / 100 || 0.19;
+            const logistics = parseFloat(document.getElementById('logistics').value) || (weight <= 0.5 ? 80 : 120);
 
             if (price <= 0 || cost <= 0) {
-                alert('Введите цену и себестоимость!');
                 return;
             }
 
-            // Расчет
-            const commissionRate = 0.19;
             const commission = price * commissionRate;
-            const logistics = weight <= 0.5 ? 80 : 120;
             const profit = price - cost - commission - logistics;
             const margin = price > 0 ? ((profit / price) * 100).toFixed(1) : 0;
 
-            // Вывод
             document.getElementById('profitValue').textContent = profit.toFixed(0) + ' ₽';
             document.getElementById('marginValue').textContent = margin + '%';
             document.getElementById('commissionValue').textContent = commission.toFixed(0) + ' ₽';
             document.getElementById('logisticsValue').textContent = logistics + ' ₽';
             document.getElementById('result').style.display = 'block';
         }
+
+        // Инициализация при загрузке
+        window.onload = function() {
+            updateLogistics();
+        };
     </script>
 </body>
 </html>
