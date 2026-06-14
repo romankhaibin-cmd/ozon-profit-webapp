@@ -4,15 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
     <title>Ozon Profit Calculator</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            padding: 16px; 
+            font-family: -apple-system, sans-serif; padding: 16px; 
             background: var(--tg-theme-bg-color, #fff); 
             color: var(--tg-theme-text-color, #000);
         }
@@ -45,6 +42,10 @@
         }
         .result-item:last-child { margin-bottom: 0; }
         .profit-value { color: #28a745; font-size: 18px; font-weight: 700; }
+        #marginValue, #commissionValue, #logisticsValue {
+            font-weight: 600;
+            color: var(--tg-theme-text-color, #000);
+        }
         .tooltip {
             position: relative;
             display: inline-block;
@@ -169,21 +170,30 @@
         tg.expand();
         tg.ready();
 
-        // Автоматический расчет логистики при изменении веса
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = '❌ ' + message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideMessages() {
+            document.getElementById('error').style.display = 'none';
+        }
+
         function updateLogistics() {
             const weight = parseFloat(document.getElementById('weight').value) || 0.3;
             const logistics = weight <= 0.5 ? 80 : 120;
             document.getElementById('logistics').value = logistics;
         }
 
-        // Основной расчет — ТОЛЬКО по кнопке
-        function calculateProfit() {
+        async function calculateProfit() {
+            hideMessages();
+            
             const price = parseFloat(document.getElementById('price').value) || 0;
             const cost = parseFloat(document.getElementById('cost').value) || 0;
             const weight = parseFloat(document.getElementById('weight').value) || 0.3;
             const commissionRate = parseFloat(document.getElementById('commission').value) / 100 || 0.19;
             
-            // Если логистика не задана вручную — считаем автоматически
             let logistics = parseFloat(document.getElementById('logistics').value);
             if (isNaN(logistics) || logistics === 0) {
                 logistics = weight <= 0.5 ? 80 : 120;
@@ -194,26 +204,35 @@
                 return;
             }
 
-            const commission = price * commissionRate;
-            const profit = price - cost - commission - logistics;
-            const margin = price > 0 ? ((profit / price) * 100).toFixed(1) : 0;
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('calcBtn').disabled = true;
 
-            document.getElementById('profitValue').textContent = profit.toFixed(0) + ' ₽';
-            document.getElementById('marginValue').textContent = margin + '%';
-            document.getElementById('commissionValue').textContent = commission.toFixed(0) + ' ₽';
-            document.getElementById('logisticsValue').textContent = logistics + ' ₽';
-            document.getElementById('result').style.display = 'block';
-            
-            // Вибрация при успехе (если поддерживается)
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.notificationOccurred('success');
+            try {
+                const commission = price * commissionRate;
+                const profit = price - cost - commission - logistics;
+                const margin = price > 0 ? ((profit / price) * 100).toFixed(1) : 0;
+
+                document.getElementById('profitValue').textContent = profit.toFixed(0) + ' ₽';
+                document.getElementById('marginValue').textContent = margin + '%';
+                document.getElementById('commissionValue').textContent = commission.toFixed(0) + ' ₽';
+                document.getElementById('logisticsValue').textContent = logistics + ' ₽';
+                document.getElementById('result').style.display = 'block';
+                
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.notificationOccurred('success');
+                }
+
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('calcBtn').disabled = false;
             }
         }
 
-        // Слушатель на поле веса для автоподстановки логистики
         document.getElementById('weight').addEventListener('input', updateLogistics);
         
-        // Инициализация при загрузке
         window.onload = function() {
             updateLogistics();
         };
