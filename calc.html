@@ -2,62 +2,99 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Ozon Profit Calc</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #fff; }
-        input { width: 100%; padding: 10px; margin: 5px 0 15px; border: 1px solid #ccc; border-radius: 5px; }
-        button { width: 100%; padding: 15px; background: #3390ec; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; }
-        .result { margin-top: 20px; padding: 15px; background: #f0f8ff; border-radius: 5px; display: none; }
-        .error { color: red; margin-top: 10px; display: none; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px; background: #f4f4f4; color: #333; margin: 0; }
+        .card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h2 { margin-top: 0; font-size: 22px; text-align: center; }
+        label { font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px; margin-top: 15px; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: #007aff; color: white; border: none; border-radius: 10px; font-size: 17px; font-weight: 600; cursor: pointer; margin-top: 25px; }
+        button:active { background: #005ecb; }
+        .result { display: none; }
+        .result-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee; font-size: 16px; }
+        .result-item:last-child { border-bottom: none; }
+        .result-item span:last-child { font-weight: bold; color: #007aff; }
+        .error { color: #ff3b30; background: #ffe5e5; padding: 12px; border-radius: 8px; text-align: center; display: none; margin-top: 15px; }
     </style>
 </head>
 <body>
-    <h2>💰 Калькулятор</h2>
-    <label>Цена (₽)</label>
-    <input type="number" id="price" value="2500">
-    <label>Себестоимость (₽)</label>
-    <input type="number" id="cost" value="1200">
-    <label>Вес (кг)</label>
-    <input type="number" id="weight" value="0.3" step="0.1">
-    <button onclick="calculate()">Рассчитать</button>
-    <div class="error" id="error"></div>
-    <div class="result" id="result">
-        <p>Прибыль: <b id="res-profit"></b> ₽</p>
-        <p>Маржа: <b id="res-margin"></b> %</p>
-        <p>Комиссия: <b id="res-com"></b> ₽</p>
+
+    <div class="card">
+        <h2>💰 Калькулятор Ozon</h2>
+        <label>Цена продажи (₽)</label>
+        <input type="number" id="price" value="2500" inputmode="numeric">
+        
+        <label>Себестоимость (₽)</label>
+        <input type="number" id="cost" value="1200" inputmode="numeric">
+        
+        <label>Вес (кг)</label>
+        <input type="number" id="weight" value="0.3" step="0.1" inputmode="decimal">
+        
+        <button onclick="calculate()">Рассчитать прибыль</button>
+        <div class="error" id="error"></div>
     </div>
+
+    <div class="card result" id="result">
+        <div class="result-item"><span>Прибыль:</span> <span id="res-profit"></span></div>
+        <div class="result-item"><span>Маржинальность:</span> <span id="res-margin"></span></div>
+        <div class="result-item"><span>Комиссия Ozon:</span> <span id="res-com"></span></div>
+        <div class="result-item"><span>Логистика:</span> <span id="res-logistics"></span></div>
+    </div>
+
     <script>
+        // Безопасная инициализация Telegram WebApp
+        if (window.Telegram && window.Telegram.WebApp) {
+            try {
+                window.Telegram.WebApp.ready();
+                window.Telegram.WebApp.expand();
+            } catch(e) {}
+        }
+
         const WEBHOOK_URL = 'https://webhook.nodul.ru/24648/prod/9d5ff094-8fbc-4465-9648-f6253efd1586';
 
         async function calculate() {
-            const price = document.getElementById('price').value;
-            const cost = document.getElementById('cost').value;
-            const weight = document.getElementById('weight').value;
+            const price = parseFloat(document.getElementById('price').value) || 0;
+            const cost = parseFloat(document.getElementById('cost').value) || 0;
+            const weight = parseFloat(document.getElementById('weight').value) || 0;
+            
             const errorDiv = document.getElementById('error');
             const resultDiv = document.getElementById('result');
+            
             errorDiv.style.display = 'none';
             resultDiv.style.display = 'none';
+
+            if (price <= 0 || cost < 0 || weight <= 0) {
+                errorDiv.innerText = 'Введите корректные числа';
+                errorDiv.style.display = 'block';
+                return;
+            }
 
             try {
                 const response = await fetch(WEBHOOK_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ price: Number(price), cost: Number(cost), weight: Number(weight) })
+                    body: JSON.stringify({ price: price, cost: cost, weight: weight })
                 });
-                if (!response.ok) throw new Error(`Ошибка ${response.status}`);
+
+                if (!response.ok) throw new Error('Ошибка сервера: ' + response.status);
+                
                 const data = await response.json();
+                
                 if (data.status === 'success') {
-                    document.getElementById('res-profit').innerText = data.profit;
-                    document.getElementById('res-margin').innerText = data.margin;
-                    document.getElementById('res-com').innerText = data.commission;
+                    document.getElementById('res-profit').innerText = data.profit + ' ₽';
+                    document.getElementById('res-margin').innerText = data.margin + ' %';
+                    document.getElementById('res-com').innerText = data.commission + ' ₽';
+                    document.getElementById('res-logistics').innerText = data.logistics + ' ₽';
                     resultDiv.style.display = 'block';
                 } else {
-                    errorDiv.innerText = 'Ошибка расчета';
-                    errorDiv.style.display = 'block';
+                    throw new Error('Неверный формат ответа');
                 }
+
             } catch (e) {
-                errorDiv.innerText = 'Не удалось соединиться: ' + e.message;
+                errorDiv.innerText = 'Ошибка: ' + e.message;
                 errorDiv.style.display = 'block';
             }
         }
