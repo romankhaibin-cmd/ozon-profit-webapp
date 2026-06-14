@@ -35,8 +35,11 @@
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+        // Безопасная инициализация Telegram WebApp
+        if (window.Telegram && Telegram.WebApp) {
+            Telegram.WebApp.ready();
+            Telegram.WebApp.expand();
+        }
 
         async function calculate() {
             const price = document.getElementById('price').value;
@@ -49,8 +52,6 @@
             errorDiv.style.display = 'none';
             resultDiv.style.display = 'none';
 
-            // ВСТАВЬТЕ СЮДА ВАШ PRODUCTION URL ИЗ NODUL (Узел #9)
-            // Он должен начинаться с /prod/
             const url = 'https://webhook.nodul.ru/24648/prod/9d5ff094-8fbc-4465-9648-f6253efd1586';
 
             try {
@@ -60,7 +61,7 @@
                     body: JSON.stringify({ price: Number(price), cost: Number(cost), weight: Number(weight) })
                 });
 
-                if (!response.ok) throw new Error('Ошибка сети');
+                if (!response.ok) throw new Error('Ошибка сети: ' + response.status);
                 
                 const data = await response.json();
                 
@@ -70,7 +71,7 @@
                     document.getElementById('res-com').innerText = data.commission + ' ₽';
                     resultDiv.style.display = 'block';
                 } else {
-                    errorDiv.innerText = 'Ошибка расчета: ' + data.error;
+                    errorDiv.innerText = 'Ошибка расчета: ' + (data.error || 'неизвестная ошибка');
                     errorDiv.style.display = 'block';
                 }
 
