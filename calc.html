@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Ozon Profit Calculator</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -29,14 +32,16 @@
         .result { 
             margin-top: 20px; 
             padding: 16px; 
-            background: var(--tg-theme-secondary-bg-color, #e8f4f8); 
+            background: var(--tg-theme-secondary-bg-color, #e3f2fd); 
             border-radius: 12px;
             border: 2px solid #3390ec;
+            color: var(--tg-theme-text-color, #000);
         }
         .result-item { 
             display: flex; justify-content: space-between; 
             margin-bottom: 12px; font-size: 15px; 
             align-items: center;
+            color: var(--tg-theme-text-color, #000);
         }
         .result-item:last-child { margin-bottom: 0; }
         .profit-value { color: #28a745; font-size: 18px; font-weight: 700; }
