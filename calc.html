@@ -10,41 +10,68 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
             font-family: -apple-system, sans-serif; padding: 16px; 
-            background: var(--tg-theme-bg-color, #ffffff); 
-            color: var(--tg-theme-text-color, #000000);
+            background: var(--tg-theme-bg-color, #fff); 
+            color: var(--tg-theme-text-color, #000);
         }
         h2 { margin-bottom: 20px; font-size: 22px; }
         .form-group { margin-bottom: 16px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; }
         input { 
-            width: 100%; padding: 14px; border: 1px solid var(--tg-theme-hint-color, #e0e0e0); 
+            width: 100%; padding: 14px; border: 1px solid #e0e0e0; 
             border-radius: 10px; font-size: 16px;
-            background: var(--tg-theme-secondary-bg-color, #f5f5f5);
-            color: var(--tg-theme-text-color, #000000);
         }
         button { 
-            width: 100%; padding: 16px; background: var(--tg-theme-button-color, #3390ec); 
-            color: var(--tg-theme-button-text-color, #ffffff); border: none; border-radius: 10px; 
+            width: 100%; padding: 16px; background: #3390ec; 
+            color: #fff; border: none; border-radius: 10px; 
             font-size: 16px; font-weight: 600; cursor: pointer;
         }
         button:disabled { opacity: 0.6; }
         .result { 
             margin-top: 20px; 
             padding: 20px; 
-            background: var(--tg-theme-secondary-bg-color, #e8f4f8); 
+            background: #e8f4f8;
             border-radius: 12px;
-            border: 2px solid var(--tg-theme-button-color, #3390ec);
+            border: 2px solid #3390ec;
         }
         .result-item { 
             display: flex; justify-content: space-between; 
-            margin-bottom: 12px; font-size: 16px; 
-            font-weight: 500;
+            margin-bottom: 12px; font-size: 16px; font-weight: 500;
         }
         .result-item:last-child { margin-bottom: 0; }
-        .profit-value { 
-            color: #28a745; 
-            font-size: 20px; 
-            font-weight: 700; 
+        .profit-value { color: #28a745; font-size: 20px; font-weight: 700; }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+            margin-left: 6px;
+            color: #666;
+            font-size: 14px;
+            border-bottom: 1px dotted #999;
+        }
+        .tooltip:hover::after,
+        .tooltip:active::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            white-space: normal;
+            z-index: 1000;
+            min-width: 220px;
+            max-width: 280px;
+            text-align: left;
+            line-height: 1.4;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .auto-calc {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
         }
         .loading { text-align: center; padding: 20px; display: none; }
         .error { 
@@ -70,6 +97,19 @@
     <div class="form-group">
         <label for="weight">Вес (кг)</label>
         <input type="number" id="weight" placeholder="0.3" step="0.1">
+        <div class="auto-calc">Логистика: до 0.5 кг — 80 ₽, свыше — 120 ₽</div>
+    </div>
+    
+    <div class="form-group">
+        <label for="commission">Комиссия Ozon (%)</label>
+        <input type="number" id="commission" value="19" step="0.1">
+        <div class="auto-calc">По умолчанию 19%, можно изменить</div>
+    </div>
+    
+    <div class="form-group">
+        <label for="logistics">Логистика (₽)</label>
+        <input type="number" id="logistics" placeholder="120">
+        <div class="auto-calc">Рассчитывается автоматически по весу, можно изменить вручную</div>
     </div>
     
     <button onclick="calculateProfit()" id="calcBtn">Рассчитать прибыль</button>
@@ -79,16 +119,42 @@
     
     <div class="result" id="result" style="display: none;">
         <div class="result-item">
-            <span>Прибыль:</span>
+            <span>
+                Прибыль
+                <span class="tooltip" data-tooltip="Формула расчета прибыли:
+
+Прибыль = Цена − Себестоимость − Комиссия Ozon − Логистика
+
+Где:
+• Комиссия Ozon = Цена × (Комиссия% ÷ 100)
+• Логистика = 80 ₽ (до 0.5 кг) или 120 ₽ (свыше)
+
+Пример: 2500 − 1200 − 475 − 80 = 745 ₽">ℹ️</span>
+            </span>
             <span class="profit-value" id="profitValue">0 ₽</span>
         </div>
         <div class="result-item">
-            <span>Маржинальность:</span>
+            <span>
+                Маржинальность
+                <span class="tooltip" data-tooltip="Формула маржинальности:
+
+Маржа = (Прибыль ÷ Цена продажи) × 100%
+
+Показывает, какой процент от цены составляет чистая прибыль.
+
+Пример: (745 ÷ 2500) × 100 = 29.8%
+
+⚠️ Если маржа отрицательная — вы работаете в убыток!">ℹ️</span>
+            </span>
             <span id="marginValue">0%</span>
         </div>
         <div class="result-item">
             <span>Комиссия Ozon:</span>
             <span id="commissionValue">0 ₽</span>
+        </div>
+        <div class="result-item">
+            <span>Логистика:</span>
+            <span id="logisticsValue">0 ₽</span>
         </div>
     </div>
 
@@ -96,8 +162,6 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.ready();
-
-        const NODUL_WEBHOOK_URL = 'https://webhook.nodul.ru/24648/dev/9d5ff094-8fbc-4465-9648-f6253efd1586';
 
         function showError(message) {
             const errorDiv = document.getElementById('error');
@@ -109,8 +173,16 @@
             document.getElementById('error').style.display = 'none';
         }
 
+        function updateLogistics() {
+            const weight = parseFloat(document.getElementById('weight').value) || 0.3;
+            const logistics = weight <= 0.5 ? 80 : 120;
+            document.getElementById('logistics').value = logistics;
+        }
+
         async function calculateProfit() {
             hideMessages();
+            
+            const webhookURL = 'https://webhook.nodul.ru/24648/dev/9d5ff094-8fbc-4465-9648-f6253efd1586';
             
             const price = document.getElementById('price').value;
             const cost = document.getElementById('cost').value;
@@ -126,7 +198,7 @@
             document.getElementById('calcBtn').disabled = true;
 
             try {
-                const response = await fetch(NODUL_WEBHOOK_URL, {
+                const response = await fetch(webhookURL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -150,6 +222,7 @@
                     document.getElementById('profitValue').textContent = data.profit.toFixed(0) + ' ₽';
                     document.getElementById('marginValue').textContent = data.margin + '%';
                     document.getElementById('commissionValue').textContent = data.commission.toFixed(0) + ' ₽';
+                    document.getElementById('logisticsValue').textContent = (data.logistics || (parseFloat(weight) <= 0.5 ? 80 : 120)) + ' ₽';
                     document.getElementById('result').style.display = 'block';
                 } else {
                     throw new Error(data.error || 'Ошибка');
@@ -162,6 +235,12 @@
                 document.getElementById('calcBtn').disabled = false;
             }
         }
+
+        document.getElementById('weight').addEventListener('input', updateLogistics);
+        
+        window.onload = function() {
+            updateLogistics();
+        };
     </script>
 </body>
 </html>
