@@ -32,6 +32,38 @@
             width: 100%; padding: 14px; border: 1px solid #e0e0e0; 
             border-radius: 10px; font-size: 16px;
         }
+        .input-hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+        .tooltip-icon {
+            display: inline-block;
+            margin-left: 6px;
+            color: #666;
+            cursor: help;
+            position: relative;
+        }
+        .tooltip-icon:hover::after,
+        .tooltip-icon:active::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            white-space: normal;
+            z-index: 1000;
+            min-width: 220px;
+            max-width: 280px;
+            text-align: left;
+            line-height: 1.4;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
         button { 
             width: 100%; padding: 16px; background: #3390ec; 
             color: #fff; border: none; border-radius: 10px; 
@@ -89,46 +121,70 @@
     <h2>💰 Калькулятор прибыли</h2>
     
     <div class="form-group">
-        <label for="price">Цена продажи (₽)</label>
+        <label for="price">Цена продажи (₽)
+            <span class="tooltip-icon" data-tooltip="Цена товара на маркетплейсе Ozon">ℹ️</span>
+        </label>
         <input type="number" id="price" placeholder="2500">
+        <div class="input-hint">Цена за единицу товара</div>
     </div>
     
     <div class="form-group">
-        <label for="cost">Себестоимость (₽)</label>
+        <label for="cost">Себестоимость (₽)
+            <span class="tooltip-icon" data-tooltip="Закупочная цена или стоимость производства">ℹ️</span>
+        </label>
         <input type="number" id="cost" placeholder="1200">
+        <div class="input-hint">Сколько вы заплатили за товар</div>
     </div>
     
     <div class="form-group">
-        <label for="weight">Вес (кг)</label>
+        <label for="weight">Вес (кг)
+            <span class="tooltip-icon" data-tooltip="Вес товара в килограммах">ℹ️</span>
+        </label>
         <input type="number" id="weight" placeholder="0.3" step="0.1">
+        <div class="input-hint">Логистика: до 0.5 кг — 80 ₽, свыше — 120 ₽</div>
     </div>
     
     <div class="form-group">
-        <label for="logistics">Логистика (₽)</label>
-        <input type="number" id="logistics" placeholder="80">
+        <label for="commission">Комиссия Ozon (%)
+            <span class="tooltip-icon" data-tooltip="Комиссия маркетплейса Ozon. Зависит от категории товара. Средняя комиссия — 19%">ℹ️</span>
+        </label>
+        <input type="number" id="commission" value="19" step="0.1">
+        <div class="input-hint">По умолчанию 19%, можно изменить</div>
     </div>
     
     <div class="form-section">
         <div class="form-section-title">Дополнительные расходы</div>
         
         <div class="form-group">
-            <label for="advertising">Реклама (₽)</label>
+            <label for="advertising">Реклама (₽)
+                <span class="tooltip-icon" data-tooltip="Расходы на рекламу: ДРР (доля рекламных расходов)">ℹ️</span>
+            </label>
             <input type="number" id="advertising" placeholder="0" step="0.01">
+            <div class="input-hint">Расходы на продвижение товара</div>
         </div>
         
         <div class="form-group">
-            <label for="taxes">Налоги (₽)</label>
+            <label for="taxes">Налоги (₽)
+                <span class="tooltip-icon" data-tooltip="Налоговые отчисления (УСН, НДС и др.)">ℹ️</span>
+            </label>
             <input type="number" id="taxes" placeholder="0" step="0.01">
+            <div class="input-hint">Налоги с продажи</div>
         </div>
         
         <div class="form-group">
-            <label for="acquiring">Эквайринг (₽)</label>
+            <label for="acquiring">Эквайринг (₽)
+                <span class="tooltip-icon" data-tooltip="Комиссия за прием платежей картами (обычно 1-3%)">ℹ️</span>
+            </label>
             <input type="number" id="acquiring" placeholder="0" step="0.01">
+            <div class="input-hint">Комиссия за прием платежей</div>
         </div>
         
         <div class="form-group">
-            <label for="fulfillment">Фулфилмент (₽)</label>
+            <label for="fulfillment">Фулфилмент (₽)
+                <span class="tooltip-icon" data-tooltip="Услуги склада: приемка, хранение, сборка и отгрузка">ℹ️</span>
+            </label>
             <input type="number" id="fulfillment" placeholder="0" step="0.01">
+            <div class="input-hint">Услуги склада Ozon</div>
         </div>
     </div>
     
@@ -139,15 +195,21 @@
     
     <div class="result" id="result" style="display: none;">
         <div class="result-item">
-            <span>Прибыль:</span>
+            <span>
+                Прибыль
+                <span class="tooltip-icon" data-tooltip="Формула расчета прибыли:&#10;&#10;Прибыль = Цена − Себестоимость − Комиссия Ozon − Логистика − Реклама − Налоги − Эквайринг − Фулфилмент&#10;&#10;Где:&#10;• Комиссия Ozon = Цена × (Комиссия% ÷ 100)&#10;• Логистика = 80 ₽ (до 0.5 кг) или 120 ₽ (свыше)&#10;&#10;Пример: 2500 − 1200 − 475 − 80 − 0 − 0 − 0 − 0 = 745 ₽">ℹ️</span>
+            </span>
             <span class="profit-value" id="profitValue">0 ₽</span>
         </div>
         <div class="result-item">
-            <span>Маржинальность:</span>
+            <span>
+                Маржинальность
+                <span class="tooltip-icon" data-tooltip="Формула маржинальности:&#10;&#10;Маржа = (Прибыль ÷ Цена продажи) × 100%&#10;&#10;Показывает, какой процент от цены составляет чистая прибыль.&#10;&#10;Пример: (745 ÷ 2500) × 100 = 29.8%&#10;&#10;⚠️ Если маржа отрицательная — вы работаете в убыток!">ℹ️</span>
+            </span>
             <span id="marginValue">0%</span>
         </div>
         <div class="result-item">
-            <span>Комиссия Ozon (19%):</span>
+            <span>Комиссия Ozon:</span>
             <span id="commissionValue">0 ₽</span>
         </div>
         <div class="result-item">
@@ -171,13 +233,19 @@
             <span id="fulfillmentValue">0 ₽</span>
         </div>
         <div class="result-item">
-            <span>Всего расходов:</span>
+            <span>
+                Всего расходов
+                <span class="tooltip-icon" data-tooltip="Общая сумма всех расходов:&#10;&#10;Комиссия Ozon + Логистика + Реклама + Налоги + Эквайринг + Фулфилмент">ℹ️</span>
+            </span>
             <span id="totalExpensesValue">0 ₽</span>
         </div>
         
         <div class="result-section">
             <div class="result-item">
-                <span>ДРР (доля рекламных расходов):</span>
+                <span>
+                    ДРР
+                    <span class="tooltip-icon" data-tooltip="ДРР (Доля Рекламных Расходов) = (Расходы на рекламу ÷ Выручка) × 100%&#10;&#10;Показывает эффективность рекламных расходов — какой процент от выручки тратится на рекламу.&#10;&#10;Рекомендации:&#10;• 5-10% — отлично ✅&#10;• 10-15% — нормально ⚠️&#10;• 15-20% — допустимо для новых товаров ⚠️&#10;• >20% — слишком дорого, нужно оптимизировать ❌">ℹ️</span>
+                </span>
                 <span id="drrValue">0%</span>
             </div>
             <div class="drr-info" id="drrInfo" style="display: none;">
@@ -231,13 +299,13 @@
             }
         }
 
-        function calculateProfit() {
+        async function calculateProfit() {
             hideMessages();
             
             const price = parseFloat(document.getElementById('price').value) || 0;
             const cost = parseFloat(document.getElementById('cost').value) || 0;
             const weight = parseFloat(document.getElementById('weight').value) || 0.3;
-            const logisticsInput = document.getElementById('logistics').value;
+            const commissionRate = parseFloat(document.getElementById('commission').value) / 100 || 0.19;
             const advertising = parseFloat(document.getElementById('advertising').value) || 0;
             const taxes = parseFloat(document.getElementById('taxes').value) || 0;
             const acquiring = parseFloat(document.getElementById('acquiring').value) || 0;
@@ -253,21 +321,24 @@
             document.getElementById('calcBtn').disabled = true;
 
             try {
-                const commissionRate = 0.19;
+                // Расчет
                 const commission = price * commissionRate;
+                const logistics = weight <= 0.5 ? 80 : 120;
                 
-                // Логистика: если не задана вручную, считаем автоматически
-                let logistics = parseFloat(logisticsInput);
-                if (isNaN(logistics) || logistics === 0) {
-                    logistics = weight <= 0.5 ? 80 : 120;
-                }
-                
+                // Общие расходы
                 const totalExpenses = commission + logistics + advertising + taxes + acquiring + fulfillment;
+                
+                // Прибыль
                 const profit = price - cost - totalExpenses;
+                
+                // Маржинальность
                 const margin = price > 0 ? ((profit / price) * 100).toFixed(1) : 0;
+                
+                // ДРР (Доля рекламных расходов)
                 const drr = price > 0 ? (advertising / price) * 100 : 0;
                 const drrAssessment = getDRRAssessment(drr);
 
+                // Вывод результатов
                 document.getElementById('profitValue').textContent = profit.toFixed(0) + ' ₽';
                 document.getElementById('marginValue').textContent = margin + '%';
                 document.getElementById('commissionValue').textContent = commission.toFixed(0) + ' ₽';
@@ -278,10 +349,12 @@
                 document.getElementById('fulfillmentValue').textContent = fulfillment.toFixed(0) + ' ₽';
                 document.getElementById('totalExpensesValue').textContent = totalExpenses.toFixed(0) + ' ₽';
                 
+                // Вывод ДРР с цветовой индикацией
                 const drrElement = document.getElementById('drrValue');
                 drrElement.textContent = drr.toFixed(1) + '%';
                 drrElement.className = drrAssessment.class;
                 
+                // Показываем оценку ДРР
                 const drrInfo = document.getElementById('drrInfo');
                 const drrAssessmentText = document.getElementById('drrAssessment');
                 drrAssessmentText.textContent = drrAssessment.text;
@@ -290,6 +363,7 @@
                 
                 document.getElementById('result').style.display = 'block';
                 
+                // Вибрация при успехе
                 if (tg.HapticFeedback) {
                     tg.HapticFeedback.notificationOccurred('success');
                 }
