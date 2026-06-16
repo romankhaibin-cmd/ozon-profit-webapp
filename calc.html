@@ -28,19 +28,21 @@
             color: var(--tg-theme-text-color, #000);
         }
         label { display: block; margin-bottom: 8px; font-weight: 600; }
-        input { 
-            width: 100%; padding: 14px; border: 1px solid #e0e0e0; 
-            border-radius: 10px; font-size: 16px;
-        }
-        .input-hint {
-            font-size: 12px;
-            color: #666;
-            margin-top: 4px;
+        .label-with-tooltip { 
+            display: flex; 
+            align-items: center; 
+            gap: 6px;
         }
         .tooltip-icon {
-            display: inline-block;
-            margin-left: 6px;
-            color: #666;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: #666;
+            color: #fff;
+            border-radius: 50%;
+            font-size: 12px;
             cursor: help;
             position: relative;
         }
@@ -64,10 +66,25 @@
             line-height: 1.4;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
+        input { 
+            width: 100%; padding: 14px; border: 1px solid #e0e0e0; 
+            border-radius: 10px; font-size: 16px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .button-group button {
+            flex: 1;
+        }
         button { 
             width: 100%; padding: 16px; background: #3390ec; 
             color: #fff; border: none; border-radius: 10px; 
             font-size: 16px; font-weight: 600; cursor: pointer;
+        }
+        button.secondary {
+            background: #6c757d;
         }
         button:disabled { opacity: 0.6; }
         .result { 
@@ -109,6 +126,11 @@
             text-align: center;
             flex: 1;
         }
+        .input-hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
         .loading { text-align: center; padding: 20px; display: none; }
         .error { 
             margin-top: 16px; padding: 12px; background: #ffebee; 
@@ -121,7 +143,8 @@
     <h2>💰 Калькулятор прибыли</h2>
     
     <div class="form-group">
-        <label for="price">Цена продажи (₽)
+        <label class="label-with-tooltip">
+            Цена продажи (₽)
             <span class="tooltip-icon" data-tooltip="Цена товара на маркетплейсе Ozon">ℹ️</span>
         </label>
         <input type="number" id="price" placeholder="2500">
@@ -129,7 +152,8 @@
     </div>
     
     <div class="form-group">
-        <label for="cost">Себестоимость (₽)
+        <label class="label-with-tooltip">
+            Себестоимость (₽)
             <span class="tooltip-icon" data-tooltip="Закупочная цена или стоимость производства">ℹ️</span>
         </label>
         <input type="number" id="cost" placeholder="1200">
@@ -137,7 +161,8 @@
     </div>
     
     <div class="form-group">
-        <label for="weight">Вес (кг)
+        <label class="label-with-tooltip">
+            Вес (кг)
             <span class="tooltip-icon" data-tooltip="Вес товара в килограммах">ℹ️</span>
         </label>
         <input type="number" id="weight" placeholder="0.3" step="0.1">
@@ -145,7 +170,8 @@
     </div>
     
     <div class="form-group">
-        <label for="commission">Комиссия Ozon (%)
+        <label class="label-with-tooltip">
+            Комиссия Ozon (%)
             <span class="tooltip-icon" data-tooltip="Комиссия маркетплейса Ozon. Зависит от категории товара. Средняя комиссия — 19%">ℹ️</span>
         </label>
         <input type="number" id="commission" value="19" step="0.1">
@@ -156,7 +182,8 @@
         <div class="form-section-title">Дополнительные расходы</div>
         
         <div class="form-group">
-            <label for="advertising">Реклама (₽)
+            <label class="label-with-tooltip">
+                Реклама (₽)
                 <span class="tooltip-icon" data-tooltip="Расходы на рекламу: ДРР (доля рекламных расходов)">ℹ️</span>
             </label>
             <input type="number" id="advertising" placeholder="0" step="0.01">
@@ -164,7 +191,8 @@
         </div>
         
         <div class="form-group">
-            <label for="taxes">Налоги (₽)
+            <label class="label-with-tooltip">
+                Налоги (₽)
                 <span class="tooltip-icon" data-tooltip="Налоговые отчисления (УСН, НДС и др.)">ℹ️</span>
             </label>
             <input type="number" id="taxes" placeholder="0" step="0.01">
@@ -172,7 +200,8 @@
         </div>
         
         <div class="form-group">
-            <label for="acquiring">Эквайринг (₽)
+            <label class="label-with-tooltip">
+                Эквайринг (₽)
                 <span class="tooltip-icon" data-tooltip="Комиссия за прием платежей картами (обычно 1-3%)">ℹ️</span>
             </label>
             <input type="number" id="acquiring" placeholder="0" step="0.01">
@@ -180,7 +209,8 @@
         </div>
         
         <div class="form-group">
-            <label for="fulfillment">Фулфилмент (₽)
+            <label class="label-with-tooltip">
+                Фулфилмент (₽)
                 <span class="tooltip-icon" data-tooltip="Услуги склада: приемка, хранение, сборка и отгрузка">ℹ️</span>
             </label>
             <input type="number" id="fulfillment" placeholder="0" step="0.01">
@@ -188,21 +218,24 @@
         </div>
     </div>
     
-    <button onclick="calculateProfit()" id="calcBtn">Рассчитать прибыль</button>
+    <div class="button-group">
+        <button onclick="calculateProfit()" id="calcBtn">Рассчитать прибыль</button>
+        <button onclick="clearFields()" class="secondary">Очистить</button>
+    </div>
     
     <div class="loading" id="loading">⏳ Считаем...</div>
     <div class="error" id="error"></div>
     
     <div class="result" id="result" style="display: none;">
         <div class="result-item">
-            <span>
+            <span class="label-with-tooltip">
                 Прибыль
                 <span class="tooltip-icon" data-tooltip="Формула расчета прибыли:&#10;&#10;Прибыль = Цена − Себестоимость − Комиссия Ozon − Логистика − Реклама − Налоги − Эквайринг − Фулфилмент&#10;&#10;Где:&#10;• Комиссия Ozon = Цена × (Комиссия% ÷ 100)&#10;• Логистика = 80 ₽ (до 0.5 кг) или 120 ₽ (свыше)&#10;&#10;Пример: 2500 − 1200 − 475 − 80 − 0 − 0 − 0 − 0 = 745 ₽">ℹ️</span>
             </span>
             <span class="profit-value" id="profitValue">0 ₽</span>
         </div>
         <div class="result-item">
-            <span>
+            <span class="label-with-tooltip">
                 Маржинальность
                 <span class="tooltip-icon" data-tooltip="Формула маржинальности:&#10;&#10;Маржа = (Прибыль ÷ Цена продажи) × 100%&#10;&#10;Показывает, какой процент от цены составляет чистая прибыль.&#10;&#10;Пример: (745 ÷ 2500) × 100 = 29.8%&#10;&#10;⚠️ Если маржа отрицательная — вы работаете в убыток!">ℹ️</span>
             </span>
@@ -233,7 +266,7 @@
             <span id="fulfillmentValue">0 ₽</span>
         </div>
         <div class="result-item">
-            <span>
+            <span class="label-with-tooltip">
                 Всего расходов
                 <span class="tooltip-icon" data-tooltip="Общая сумма всех расходов:&#10;&#10;Комиссия Ozon + Логистика + Реклама + Налоги + Эквайринг + Фулфилмент">ℹ️</span>
             </span>
@@ -242,7 +275,7 @@
         
         <div class="result-section">
             <div class="result-item">
-                <span>
+                <span class="label-with-tooltip">
                     ДРР
                     <span class="tooltip-icon" data-tooltip="ДРР (Доля Рекламных Расходов) = (Расходы на рекламу ÷ Выручка) × 100%&#10;&#10;Показывает эффективность рекламных расходов — какой процент от выручки тратится на рекламу.&#10;&#10;Рекомендации:&#10;• 5-10% — отлично ✅&#10;• 10-15% — нормально ⚠️&#10;• 15-20% — допустимо для новых товаров ⚠️&#10;• >20% — слишком дорого, нужно оптимизировать ❌">ℹ️</span>
                 </span>
@@ -285,6 +318,19 @@
 
         function hideMessages() {
             document.getElementById('error').style.display = 'none';
+        }
+
+        function clearFields() {
+            document.getElementById('price').value = '';
+            document.getElementById('cost').value = '';
+            document.getElementById('weight').value = '';
+            document.getElementById('commission').value = '19';
+            document.getElementById('advertising').value = '';
+            document.getElementById('taxes').value = '';
+            document.getElementById('acquiring').value = '';
+            document.getElementById('fulfillment').value = '';
+            document.getElementById('result').style.display = 'none';
+            hideMessages();
         }
 
         function getDRRAssessment(drr) {
