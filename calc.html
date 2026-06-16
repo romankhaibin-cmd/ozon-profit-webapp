@@ -200,12 +200,11 @@
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        tg.ready();
-
+        // СНАЧАЛА объявляем все переменные и функции
+        var tg = window.Telegram.WebApp;
+        
         function showError(message) {
-            const errorDiv = document.getElementById('error');
+            var errorDiv = document.getElementById('error');
             errorDiv.textContent = '❌ ' + message;
             errorDiv.style.display = 'block';
         }
@@ -226,19 +225,20 @@
             }
         }
 
-        async function calculateProfit() {
+        function calculateProfit() {
             hideMessages();
             
-            const price = parseFloat(document.getElementById('price').value) || 0;
-            const cost = parseFloat(document.getElementById('cost').value) || 0;
-            const weight = parseFloat(document.getElementById('weight').value) || 0.3;
-            const advertising = parseFloat(document.getElementById('advertising').value) || 0;
-            const taxes = parseFloat(document.getElementById('taxes').value) || 0;
-            const acquiring = parseFloat(document.getElementById('acquiring').value) || 0;
-            const fulfillment = parseFloat(document.getElementById('fulfillment').value) || 0;
+            var price = parseFloat(document.getElementById('price').value) || 0;
+            var cost = parseFloat(document.getElementById('cost').value) || 0;
+            var weight = parseFloat(document.getElementById('weight').value) || 0.3;
+            var advertising = parseFloat(document.getElementById('advertising').value) || 0;
+            var taxes = parseFloat(document.getElementById('taxes').value) || 0;
+            var acquiring = parseFloat(document.getElementById('acquiring').value) || 0;
+            var fulfillment = parseFloat(document.getElementById('fulfillment').value) || 0;
 
             if (price <= 0 || cost <= 0) {
-                tg.showAlert('Введите цену и себестоимость!');
+                if (tg) tg.showAlert('Введите цену и себестоимость!');
+                else alert('Введите цену и себестоимость!');
                 return;
             }
 
@@ -246,61 +246,62 @@
             document.getElementById('result').style.display = 'none';
             document.getElementById('calcBtn').disabled = true;
 
-            try {
-                // Расчет
-                const commissionRate = 0.19;
-                const commission = price * commissionRate;
-                const logistics = weight <= 0.5 ? 80 : 120;
-                
-                // Общие расходы
-                const totalExpenses = commission + logistics + advertising + taxes + acquiring + fulfillment;
-                
-                // Прибыль
-                const profit = price - cost - totalExpenses;
-                
-                // Маржинальность
-                const margin = price > 0 ? ((profit / price) * 100).toFixed(1) : 0;
-                
-                // ДРР (Доля рекламных расходов)
-                const drr = price > 0 ? (advertising / price) * 100 : 0;
-                const drrAssessment = getDRRAssessment(drr);
+            // Расчет
+            var commissionRate = 0.19;
+            var commission = price * commissionRate;
+            var logistics = weight <= 0.5 ? 80 : 120;
+            
+            // Общие расходы
+            var totalExpenses = commission + logistics + advertising + taxes + acquiring + fulfillment;
+            
+            // Прибыль
+            var profit = price - cost - totalExpenses;
+            
+            // Маржинальность
+            var margin = price > 0 ? ((profit / price) * 100).toFixed(1) : 0;
+            
+            // ДРР (Доля рекламных расходов)
+            var drr = price > 0 ? (advertising / price) * 100 : 0;
+            var drrAssessment = getDRRAssessment(drr);
 
-                // Вывод результатов
-                document.getElementById('profitValue').textContent = profit.toFixed(0) + ' ₽';
-                document.getElementById('marginValue').textContent = margin + '%';
-                document.getElementById('commissionValue').textContent = commission.toFixed(0) + ' ₽';
-                document.getElementById('logisticsValue').textContent = logistics + ' ₽';
-                document.getElementById('advertisingValue').textContent = advertising.toFixed(0) + ' ₽';
-                document.getElementById('taxesValue').textContent = taxes.toFixed(0) + ' ₽';
-                document.getElementById('acquiringValue').textContent = acquiring.toFixed(0) + ' ₽';
-                document.getElementById('fulfillmentValue').textContent = fulfillment.toFixed(0) + ' ₽';
-                document.getElementById('totalExpensesValue').textContent = totalExpenses.toFixed(0) + ' ₽';
-                
-                // Вывод ДРР с цветовой индикацией
-                const drrElement = document.getElementById('drrValue');
-                drrElement.textContent = drr.toFixed(1) + '%';
-                drrElement.className = drrAssessment.class;
-                
-                // Показываем оценку ДРР
-                const drrInfo = document.getElementById('drrInfo');
-                const drrAssessmentText = document.getElementById('drrAssessment');
-                drrAssessmentText.textContent = drrAssessment.text;
-                drrAssessmentText.className = drrAssessment.class;
-                drrInfo.style.display = 'block';
-                
-                document.getElementById('result').style.display = 'block';
-                
-                // Вибрация при успехе
-                if (tg.HapticFeedback) {
-                    tg.HapticFeedback.notificationOccurred('success');
-                }
-
-            } catch (error) {
-                showError(error.message);
-            } finally {
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('calcBtn').disabled = false;
+            // Вывод результатов
+            document.getElementById('profitValue').textContent = profit.toFixed(0) + ' ₽';
+            document.getElementById('marginValue').textContent = margin + '%';
+            document.getElementById('commissionValue').textContent = commission.toFixed(0) + ' ₽';
+            document.getElementById('logisticsValue').textContent = logistics + ' ₽';
+            document.getElementById('advertisingValue').textContent = advertising.toFixed(0) + ' ₽';
+            document.getElementById('taxesValue').textContent = taxes.toFixed(0) + ' ₽';
+            document.getElementById('acquiringValue').textContent = acquiring.toFixed(0) + ' ₽';
+            document.getElementById('fulfillmentValue').textContent = fulfillment.toFixed(0) + ' ₽';
+            document.getElementById('totalExpensesValue').textContent = totalExpenses.toFixed(0) + ' ₽';
+            
+            // Вывод ДРР с цветовой индикацией
+            var drrElement = document.getElementById('drrValue');
+            drrElement.textContent = drr.toFixed(1) + '%';
+            drrElement.className = drrAssessment.class;
+            
+            // Показываем оценку ДРР
+            var drrInfo = document.getElementById('drrInfo');
+            var drrAssessmentText = document.getElementById('drrAssessment');
+            drrAssessmentText.textContent = drrAssessment.text;
+            drrAssessmentText.className = drrAssessment.class;
+            drrInfo.style.display = 'block';
+            
+            document.getElementById('result').style.display = 'block';
+            
+            // Вибрация при успехе
+            if (tg && tg.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
             }
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('calcBtn').disabled = false;
+        }
+
+        // Инициализация Telegram WebApp
+        if (tg) {
+            tg.expand();
+            tg.ready();
         }
     </script>
 </body>
