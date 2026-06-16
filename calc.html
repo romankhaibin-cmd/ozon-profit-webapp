@@ -15,6 +15,8 @@
         }
         h2 { margin-bottom: 20px; font-size: 22px; }
         .form-group { margin-bottom: 16px; }
+        .form-section { margin-bottom: 20px; padding: 16px; background: var(--tg-theme-secondary-bg-color, #f5f5f5); border-radius: 12px; }
+        .form-section-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--tg-theme-text-color, #000); }
         label { display: block; margin-bottom: 8px; font-weight: 600; }
         input { 
             width: 100%; padding: 14px; border: 1px solid #e0e0e0; 
@@ -27,24 +29,48 @@
         }
         button:disabled { opacity: 0.6; }
         .result { 
-            margin-top: 20px; 
-            padding: 16px; 
-            background: var(--tg-theme-secondary-bg-color, #e3f2fd); 
-            border-radius: 12px;
-            border: 2px solid #3390ec;
+            margin-top: 20px; padding: 16px; background: var(--tg-theme-secondary-bg-color, #e3f2fd); 
+            border-radius: 12px; border: 2px solid #3390ec;
             color: var(--tg-theme-text-color, #000);
         }
         .result-item { 
             display: flex; justify-content: space-between; 
             margin-bottom: 12px; font-size: 15px; 
-            align-items: center;
             color: var(--tg-theme-text-color, #000);
         }
         .result-item:last-child { margin-bottom: 0; }
         .profit-value { color: #28a745; font-size: 18px; font-weight: 700; }
-        #marginValue, #commissionValue, #logisticsValue {
+        .drr-excellent { color: #28a745; font-weight: 700; }
+        .drr-good { color: #ffc107; font-weight: 700; }
+        .drr-warning { color: #ff9800; font-weight: 700; }
+        .drr-bad { color: #f44336; font-weight: 700; }
+        .drr-info {
+            margin-top: 12px;
+            padding: 12px;
+            background: #fff;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+        .drr-info-title {
             font-weight: 600;
-            color: var(--tg-theme-text-color, #000);
+            margin-bottom: 8px;
+        }
+        .drr-scale {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 12px;
+        }
+        .drr-scale-item {
+            text-align: center;
+            flex: 1;
+        }
+        .drr-scale-value {
+            font-weight: 600;
+            display: block;
+        }
+        .drr-scale-label {
+            color: #666;
         }
         .tooltip {
             position: relative;
@@ -107,16 +133,28 @@
         <div class="auto-calc">Логистика: до 0.5 кг — 80 ₽, свыше — 120 ₽</div>
     </div>
     
-    <div class="form-group">
-        <label for="commission">Комиссия Ozon (%)</label>
-        <input type="number" id="commission" value="19" step="0.1">
-        <div class="auto-calc">По умолчанию 19%, можно изменить</div>
-    </div>
-    
-    <div class="form-group">
-        <label for="logistics">Логистика (₽)</label>
-        <input type="number" id="logistics" placeholder="120">
-        <div class="auto-calc">Рассчитывается автоматически по весу, можно изменить вручную</div>
+    <div class="form-section">
+        <div class="form-section-title">Дополнительные расходы</div>
+        
+        <div class="form-group">
+            <label for="advertising">Реклама (₽)</label>
+            <input type="number" id="advertising" value="0" step="0.01">
+        </div>
+        
+        <div class="form-group">
+            <label for="taxes">Налоги (₽)</label>
+            <input type="number" id="taxes" value="0" step="0.01">
+        </div>
+        
+        <div class="form-group">
+            <label for="acquiring">Эквайринг (₽)</label>
+            <input type="number" id="acquiring" value="0" step="0.01">
+        </div>
+        
+        <div class="form-group">
+            <label for="fulfillment">Фулфилмент (₽)</label>
+            <input type="number" id="fulfillment" value="0" step="0.01">
+        </div>
     </div>
     
     <button onclick="calculateProfit()" id="calcBtn">Рассчитать прибыль</button>
@@ -130,13 +168,13 @@
                 Прибыль
                 <span class="tooltip" data-tooltip="Формула расчета прибыли:
 
-Прибыль = Цена − Себестоимость − Комиссия Ozon − Логистика
+Прибыль = Цена − Себестоимость − Комиссия Ozon − Логистика − Реклама − Налоги − Эквайринг − Фулфилмент
 
 Где:
-• Комиссия Ozon = Цена × (Комиссия% ÷ 100)
+• Комиссия Ozon = Цена × 19%
 • Логистика = 80 ₽ (до 0.5 кг) или 120 ₽ (свыше)
 
-Пример: 2500 − 1200 − 475 − 80 = 745 ₽">ℹ️</span>
+Пример: 2500 − 1200 − 475 − 80 − 0 − 0 − 0 − 0 = 745 ₽">ℹ️</span>
             </span>
             <span class="profit-value" id="profitValue">0 ₽</span>
         </div>
@@ -163,6 +201,70 @@
             <span>Логистика:</span>
             <span id="logisticsValue">0 ₽</span>
         </div>
+        <div class="result-item">
+            <span>Реклама:</span>
+            <span id="advertisingValue">0 ₽</span>
+        </div>
+        <div class="result-item">
+            <span>Налоги:</span>
+            <span id="taxesValue">0 ₽</span>
+        </div>
+        <div class="result-item">
+            <span>Эквайринг:</span>
+            <span id="acquiringValue">0 ₽</span>
+        </div>
+        <div class="result-item">
+            <span>Фулфилмент:</span>
+            <span id="fulfillmentValue">0 ₽</span>
+        </div>
+        <div class="result-item">
+            <span>
+                Всего расходов
+                <span class="tooltip" data-tooltip="Общая сумма всех расходов:
+
+Комиссия Ozon + Логистика + Реклама + Налоги + Эквайринг + Фулфилмент">ℹ️</span>
+            </span>
+            <span id="totalExpensesValue">0 ₽</span>
+        </div>
+        
+        <div class="result-item" style="margin-top: 16px; padding-top: 16px; border-top: 2px solid #3390ec;">
+            <span>
+                ДРР
+                <span class="tooltip" data-tooltip="ДРР (Доля Рекламных Расходов) = (Расходы на рекламу ÷ Выручка) × 100%
+
+Показывает эффективность рекламных расходов — какой процент от выручки тратится на рекламу.
+
+Рекомендации:
+• 5-10% — отлично ✅
+• 10-15% — нормально ⚠️
+• 15-20% — допустимо для новых товаров ⚠️
+• >20% — слишком дорого, нужно оптимизировать ❌">️</span>
+            </span>
+            <span id="drrValue">0%</span>
+        </div>
+        
+        <div class="drr-info" id="drrInfo" style="display: none;">
+            <div class="drr-info-title">Оценка эффективности рекламы:</div>
+            <div id="drrAssessment"></div>
+            <div class="drr-scale">
+                <div class="drr-scale-item">
+                    <span class="drr-scale-value" style="color: #28a745;">5-10%</span>
+                    <span class="drr-scale-label">Отлично</span>
+                </div>
+                <div class="drr-scale-item">
+                    <span class="drr-scale-value" style="color: #ffc107;">10-15%</span>
+                    <span class="drr-scale-label">Нормально</span>
+                </div>
+                <div class="drr-scale-item">
+                    <span class="drr-scale-value" style="color: #ff9800;">15-20%</span>
+                    <span class="drr-scale-label">Допустимо</span>
+                </div>
+                <div class="drr-scale-item">
+                    <span class="drr-scale-value" style="color: #f44336;">>20%</span>
+                    <span class="drr-scale-label">Высокий</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -180,10 +282,28 @@
             document.getElementById('error').style.display = 'none';
         }
 
-        function updateLogistics() {
-            const weight = parseFloat(document.getElementById('weight').value) || 0.3;
-            const logistics = weight <= 0.5 ? 80 : 120;
-            document.getElementById('logistics').value = logistics;
+        function getDRRAssessment(drr) {
+            if (drr <= 10) {
+                return {
+                    text: '✅ Отлично! Эффективность рекламы на высоком уровне.',
+                    class: 'drr-excellent'
+                };
+            } else if (drr <= 15) {
+                return {
+                    text: '⚠️ Нормально. Можно оптимизировать рекламные расходы.',
+                    class: 'drr-good'
+                };
+            } else if (drr <= 20) {
+                return {
+                    text: '⚠️ Допустимо для новых товаров. Рекомендуется оптимизация.',
+                    class: 'drr-warning'
+                };
+            } else {
+                return {
+                    text: '❌ Высокий ДРР! Необходимо срочно оптимизировать рекламу.',
+                    class: 'drr-bad'
+                };
+            }
         }
 
         async function calculateProfit() {
@@ -192,12 +312,10 @@
             const price = parseFloat(document.getElementById('price').value) || 0;
             const cost = parseFloat(document.getElementById('cost').value) || 0;
             const weight = parseFloat(document.getElementById('weight').value) || 0.3;
-            const commissionRate = parseFloat(document.getElementById('commission').value) / 100 || 0.19;
-            
-            let logistics = parseFloat(document.getElementById('logistics').value);
-            if (isNaN(logistics) || logistics === 0) {
-                logistics = weight <= 0.5 ? 80 : 120;
-            }
+            const advertising = parseFloat(document.getElementById('advertising').value) || 0;
+            const taxes = parseFloat(document.getElementById('taxes').value) || 0;
+            const acquiring = parseFloat(document.getElementById('acquiring').value) || 0;
+            const fulfillment = parseFloat(document.getElementById('fulfillment').value) || 0;
 
             if (price <= 0 || cost <= 0) {
                 tg.showAlert('Введите цену и себестоимость!');
@@ -209,16 +327,50 @@
             document.getElementById('calcBtn').disabled = true;
 
             try {
+                // Расчет
+                const commissionRate = 0.19;
                 const commission = price * commissionRate;
-                const profit = price - cost - commission - logistics;
+                const logistics = weight <= 0.5 ? 80 : 120;
+                
+                // Общие расходы
+                const totalExpenses = commission + logistics + advertising + taxes + acquiring + fulfillment;
+                
+                // Прибыль
+                const profit = price - cost - totalExpenses;
+                
+                // Маржинальность
                 const margin = price > 0 ? ((profit / price) * 100).toFixed(1) : 0;
+                
+                // ДРР (Доля рекламных расходов)
+                const drr = price > 0 ? (advertising / price) * 100 : 0;
+                const drrAssessment = getDRRAssessment(drr);
 
+                // Вывод результатов
                 document.getElementById('profitValue').textContent = profit.toFixed(0) + ' ₽';
                 document.getElementById('marginValue').textContent = margin + '%';
                 document.getElementById('commissionValue').textContent = commission.toFixed(0) + ' ₽';
                 document.getElementById('logisticsValue').textContent = logistics + ' ₽';
+                document.getElementById('advertisingValue').textContent = advertising.toFixed(0) + ' ₽';
+                document.getElementById('taxesValue').textContent = taxes.toFixed(0) + ' ₽';
+                document.getElementById('acquiringValue').textContent = acquiring.toFixed(0) + ' ₽';
+                document.getElementById('fulfillmentValue').textContent = fulfillment.toFixed(0) + ' ₽';
+                document.getElementById('totalExpensesValue').textContent = totalExpenses.toFixed(0) + ' ₽';
+                
+                // Вывод ДРР с цветовой индикацией
+                const drrElement = document.getElementById('drrValue');
+                drrElement.textContent = drr.toFixed(1) + '%';
+                drrElement.className = drrAssessment.class;
+                
+                // Показываем оценку ДРР
+                const drrInfo = document.getElementById('drrInfo');
+                const drrAssessmentText = document.getElementById('drrAssessment');
+                drrAssessmentText.textContent = drrAssessment.text;
+                drrAssessmentText.className = drrAssessment.class;
+                drrInfo.style.display = 'block';
+                
                 document.getElementById('result').style.display = 'block';
                 
+                // Вибрация при успехе
                 if (tg.HapticFeedback) {
                     tg.HapticFeedback.notificationOccurred('success');
                 }
@@ -230,12 +382,6 @@
                 document.getElementById('calcBtn').disabled = false;
             }
         }
-
-        document.getElementById('weight').addEventListener('input', updateLogistics);
-        
-        window.onload = function() {
-            updateLogistics();
-        };
     </script>
 </body>
 </html>
