@@ -50,33 +50,22 @@
         .tooltip-icon:hover::after,
         .tooltip-icon:active::after {
             content: attr(data-tooltip);
-            position: absolute;
-            bottom: 125%;
+            position: fixed;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translate(-50%, -50%);
             background: #333;
             color: #fff;
             padding: 10px 14px;
             border-radius: 8px;
             font-size: 12px;
             white-space: normal;
-            z-index: 1000;
-            min-width: 200px;
-            max-width: 280px;
+            z-index: 10000;
+            min-width: 220px;
+            max-width: 90vw;
             text-align: left;
             line-height: 1.4;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            word-wrap: break-word;
-        }
-        @media (max-width: 480px) {
-            .tooltip-icon:hover::after,
-            .tooltip-icon:active::after {
-                left: auto;
-                right: 0;
-                transform: none;
-                min-width: 220px;
-                max-width: 90vw;
-            }
         }
         input { 
             width: 100%; padding: 14px; border: 1px solid #e0e0e0; 
