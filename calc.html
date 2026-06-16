@@ -47,8 +47,7 @@
             position: relative;
             flex-shrink: 0;
         }
-        .tooltip-icon:hover::after,
-        .tooltip-icon:active::after {
+        .tooltip-icon::after {
             content: attr(data-tooltip);
             position: fixed;
             top: 50%;
@@ -56,16 +55,24 @@
             transform: translate(-50%, -50%);
             background: #333;
             color: #fff;
-            padding: 10px 14px;
+            padding: 12px 16px;
             border-radius: 8px;
-            font-size: 12px;
+            font-size: 13px;
             white-space: normal;
             z-index: 10000;
-            min-width: 220px;
+            min-width: 200px;
             max-width: 90vw;
             text-align: left;
             line-height: 1.4;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s, visibility 0.2s;
+        }
+        .tooltip-icon:hover::after,
+        .tooltip-icon:active::after {
+            opacity: 1;
+            visibility: visible;
         }
         input { 
             width: 100%; padding: 14px; border: 1px solid #e0e0e0; 
@@ -155,7 +162,7 @@
     <div class="form-group">
         <label class="label-with-tooltip">
             Себестоимость (₽)
-            <span class="tooltip-icon" data-tooltip="Закупочная цена или стоимость производства">ℹ️</span>
+            <span class="tooltip-icon" data-tooltip="Закупочная цена или стоимость производства">️</span>
         </label>
         <input type="number" id="cost" placeholder="1200">
         <div class="input-hint">Сколько вы заплатили за товар</div>
@@ -231,7 +238,7 @@
         <div class="result-item">
             <span class="label-with-tooltip">
                 Прибыль
-                <span class="tooltip-icon" data-tooltip="Формула расчета прибыли:&#10;&#10;Прибыль = Цена − Себестоимость − Комиссия Ozon − Логистика − Реклама − Налоги − Эквайринг − Фулфилмент&#10;&#10;Где:&#10;• Комиссия Ozon = Цена × (Комиссия% ÷ 100)&#10;• Логистика = 80 ₽ (до 0.5 кг) или 120 ₽ (свыше)&#10;&#10;Пример: 2500 − 1200 − 475 − 80 − 0 − 0 − 0 − 0 = 745 ₽">ℹ️</span>
+                <span class="tooltip-icon" data-tooltip="Формула расчета прибыли:&#10;&#10;Прибыль = Цена − Себестоимость − Комиссия Ozon − Логистика − Реклама − Налоги − Эквайринг − Фулфилмент&#10;&#10;Где:&#10;• Комиссия Ozon = Цена × (Комиссия% ÷ 100)&#10;• Логистика = 80 ₽ (до 0.5 кг) или 120 ₽ (свыше)&#10;&#10;Пример: 2500 − 1200 − 475 − 80 − 0 − 0 − 0 − 0 = 745 ₽">️</span>
             </span>
             <span class="profit-value" id="profitValue">0 ₽</span>
         </div>
