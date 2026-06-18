@@ -85,15 +85,15 @@
         }
         @media (max-width: 480px) {
             .tooltip-icon::after {
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
+                position: absolute;
+                top: 0;
+                left: 100%;
+                margin-left: 8px;
                 bottom: auto;
-                margin-left: 0;
-                min-width: 220px;
-                max-width: 90vw;
-                z-index: 10000;
+                transform: none;
+                min-width: 200px;
+                max-width: 200px;
+                z-index: 1000;
             }
         }
         input { 
