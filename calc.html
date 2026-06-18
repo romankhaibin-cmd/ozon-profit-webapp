@@ -33,7 +33,6 @@
             align-items: center; 
             gap: 6px;
         }
-        /* Единая синяя иконка "i" для всех подсказок */
         .tooltip-icon {
             display: inline-flex;
             align-items: center;
@@ -54,7 +53,6 @@
         .tooltip-icon::before {
             content: 'i';
         }
-        /* Подсказка появляется СПРАВА от иконки */
         .tooltip-icon::after {
             content: attr(data-tooltip);
             position: absolute;
@@ -84,6 +82,19 @@
         .tooltip-icon:active::after {
             opacity: 1;
             visibility: visible;
+        }
+        @media (max-width: 480px) {
+            .tooltip-icon::after {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                bottom: auto;
+                margin-left: 0;
+                min-width: 220px;
+                max-width: 90vw;
+                z-index: 10000;
+            }
         }
         input { 
             width: 100%; padding: 14px; border: 1px solid #e0e0e0; 
