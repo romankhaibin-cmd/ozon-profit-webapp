@@ -33,33 +33,41 @@
             align-items: center; 
             gap: 6px;
         }
+        /* Единая синяя иконка "i" для всех подсказок */
         .tooltip-icon {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             width: 18px;
             height: 18px;
-            background: #666;
+            background: #3390ec;
             color: #fff;
             border-radius: 50%;
-            font-size: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            font-style: italic;
             cursor: help;
             position: relative;
             flex-shrink: 0;
+            user-select: none;
         }
-        
-        /* ДЕСКТОП: подсказка рядом с иконкой (сверху) */
+        .tooltip-icon::before {
+            content: 'i';
+        }
+        /* Подсказка появляется СПРАВА от иконки */
         .tooltip-icon::after {
             content: attr(data-tooltip);
             position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 0;
+            left: 100%;
+            margin-left: 8px;
             background: #333;
             color: #fff;
             padding: 10px 14px;
             border-radius: 8px;
             font-size: 12px;
+            font-style: normal;
+            font-weight: normal;
             white-space: normal;
             z-index: 1000;
             min-width: 200px;
@@ -70,29 +78,13 @@
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.2s, visibility 0.2s;
-            margin-bottom: 8px;
+            pointer-events: none;
         }
-        
         .tooltip-icon:hover::after,
         .tooltip-icon:active::after {
             opacity: 1;
             visibility: visible;
         }
-        
-        /* МОБИЛЬНЫЕ: подсказка по центру экрана */
-        @media (max-width: 480px) {
-            .tooltip-icon::after {
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                bottom: auto;
-                margin-bottom: 0;
-                min-width: 220px;
-                max-width: 90vw;
-            }
-        }
-        
         input { 
             width: 100%; padding: 14px; border: 1px solid #e0e0e0; 
             border-radius: 10px; font-size: 16px;
@@ -167,12 +159,12 @@
     </style>
 </head>
 <body>
-    <h2> Калькулятор прибыли</h2>
+    <h2>💰 Калькулятор прибыли</h2>
     
     <div class="form-group">
         <label class="label-with-tooltip">
             Цена продажи (₽)
-            <span class="tooltip-icon" data-tooltip="Цена товара на маркетплейсе Ozon">️</span>
+            <span class="tooltip-icon" data-tooltip="Цена товара на маркетплейсе Ozon"></span>
         </label>
         <input type="number" id="price" placeholder="2500">
         <div class="input-hint">Цена за единицу товара</div>
@@ -181,7 +173,7 @@
     <div class="form-group">
         <label class="label-with-tooltip">
             Себестоимость (₽)
-            <span class="tooltip-icon" data-tooltip="Закупочная цена или стоимость производства">ℹ️</span>
+            <span class="tooltip-icon" data-tooltip="Закупочная цена или стоимость производства"></span>
         </label>
         <input type="number" id="cost" placeholder="1200">
         <div class="input-hint">Сколько вы заплатили за товар</div>
@@ -190,7 +182,7 @@
     <div class="form-group">
         <label class="label-with-tooltip">
             Вес (кг)
-            <span class="tooltip-icon" data-tooltip="Вес товара в килограммах">ℹ️</span>
+            <span class="tooltip-icon" data-tooltip="Вес товара в килограммах"></span>
         </label>
         <input type="number" id="weight" placeholder="0.3" step="0.1">
         <div class="input-hint">Логистика: до 0.5 кг — 80 ₽, свыше — 120 ₽</div>
@@ -199,7 +191,7 @@
     <div class="form-group">
         <label class="label-with-tooltip">
             Комиссия Ozon (%)
-            <span class="tooltip-icon" data-tooltip="Комиссия маркетплейса Ozon. Зависит от категории товара. Средняя комиссия — 19%">ℹ️</span>
+            <span class="tooltip-icon" data-tooltip="Комиссия маркетплейса Ozon. Зависит от категории товара. Средняя комиссия — 19%"></span>
         </label>
         <input type="number" id="commission" value="19" step="0.1">
         <div class="input-hint">По умолчанию 19%, можно изменить</div>
@@ -211,7 +203,7 @@
         <div class="form-group">
             <label class="label-with-tooltip">
                 Реклама (₽)
-                <span class="tooltip-icon" data-tooltip="Расходы на рекламу: ДРР (доля рекламных расходов)">️</span>
+                <span class="tooltip-icon" data-tooltip="Расходы на рекламу: ДРР (доля рекламных расходов)"></span>
             </label>
             <input type="number" id="advertising" placeholder="0" step="0.01">
             <div class="input-hint">Расходы на продвижение товара</div>
@@ -220,7 +212,7 @@
         <div class="form-group">
             <label class="label-with-tooltip">
                 Налоги (₽)
-                <span class="tooltip-icon" data-tooltip="Налоговые отчисления (УСН, НДС и др.)">ℹ️</span>
+                <span class="tooltip-icon" data-tooltip="Налоговые отчисления (УСН, НДС и др.)"></span>
             </label>
             <input type="number" id="taxes" placeholder="0" step="0.01">
             <div class="input-hint">Налоги с продажи</div>
@@ -229,7 +221,7 @@
         <div class="form-group">
             <label class="label-with-tooltip">
                 Эквайринг (₽)
-                <span class="tooltip-icon" data-tooltip="Комиссия за прием платежей картами (обычно 1-3%)">ℹ️</span>
+                <span class="tooltip-icon" data-tooltip="Комиссия за прием платежей картами (обычно 1-3%)"></span>
             </label>
             <input type="number" id="acquiring" placeholder="0" step="0.01">
             <div class="input-hint">Комиссия за прием платежей</div>
@@ -238,7 +230,7 @@
         <div class="form-group">
             <label class="label-with-tooltip">
                 Фулфилмент (₽)
-                <span class="tooltip-icon" data-tooltip="Услуги склада: приемка, хранение, сборка и отгрузка">ℹ️</span>
+                <span class="tooltip-icon" data-tooltip="Услуги склада: приемка, хранение, сборка и отгрузка"></span>
             </label>
             <input type="number" id="fulfillment" placeholder="0" step="0.01">
             <div class="input-hint">Услуги склада Ozon</div>
@@ -250,21 +242,21 @@
         <button onclick="clearFields()" class="secondary">Очистить</button>
     </div>
     
-    <div class="loading" id="loading"> Считаем...</div>
+    <div class="loading" id="loading">⏳ Считаем...</div>
     <div class="error" id="error"></div>
     
     <div class="result" id="result" style="display: none;">
         <div class="result-item">
             <span class="label-with-tooltip">
                 Прибыль
-                <span class="tooltip-icon" data-tooltip="Формула расчета прибыли:&#10;&#10;Прибыль = Цена − Себестоимость − Комиссия Ozon − Логистика − Реклама − Налоги − Эквайринг − Фулфилмент&#10;&#10;Где:&#10;• Комиссия Ozon = Цена × (Комиссия% ÷ 100)&#10;• Логистика = 80 ₽ (до 0.5 кг) или 120 ₽ (свыше)&#10;&#10;Пример: 2500 − 1200 − 475 − 80 − 0 − 0 − 0 − 0 = 745 ₽">ℹ️</span>
+                <span class="tooltip-icon" data-tooltip="Формула: Прибыль = Цена − Себестоимость − Комиссия Ozon − Логистика − Реклама − Налоги − Эквайринг − Фулфилмент"></span>
             </span>
             <span class="profit-value" id="profitValue">0 ₽</span>
         </div>
         <div class="result-item">
             <span class="label-with-tooltip">
                 Маржинальность
-                <span class="tooltip-icon" data-tooltip="Формула маржинальности:&#10;&#10;Маржа = (Прибыль ÷ Цена продажи) × 100%&#10;&#10;Показывает, какой процент от цены составляет чистая прибыль.&#10;&#10;Пример: (745 ÷ 2500) × 100 = 29.8%&#10;&#10;⚠️ Если маржа отрицательная — вы работаете в убыток!">ℹ️</span>
+                <span class="tooltip-icon" data-tooltip="Маржа = (Прибыль ÷ Цена продажи) × 100%. Показывает процент прибыли от цены."></span>
             </span>
             <span id="marginValue">0%</span>
         </div>
@@ -295,7 +287,7 @@
         <div class="result-item">
             <span class="label-with-tooltip">
                 Всего расходов
-                <span class="tooltip-icon" data-tooltip="Общая сумма всех расходов:&#10;&#10;Комиссия Ozon + Логистика + Реклама + Налоги + Эквайринг + Фулфилмент">ℹ️</span>
+                <span class="tooltip-icon" data-tooltip="Сумма: Комиссия + Логистика + Реклама + Налоги + Эквайринг + Фулфилмент"></span>
             </span>
             <span id="totalExpensesValue">0 ₽</span>
         </div>
@@ -304,7 +296,7 @@
             <div class="result-item">
                 <span class="label-with-tooltip">
                     ДРР
-                    <span class="tooltip-icon" data-tooltip="ДРР (Доля Рекламных Расходов) = (Расходы на рекламу ÷ Выручка) × 100%&#10;&#10;Показывает эффективность рекламных расходов — какой процент от выручки тратится на рекламу.&#10;&#10;Рекомендации:&#10;• 5-10% — отлично ✅&#10;• 10-15% — нормально ⚠️&#10;• 15-20% — допустимо для новых товаров ️&#10;• >20% — слишком дорого, нужно оптимизировать ❌">ℹ️</span>
+                    <span class="tooltip-icon" data-tooltip="ДРР = (Реклама ÷ Цена) × 100%. 5-10% отлично, 10-15% нормально, 15-20% допустимо, >20% высокий"></span>
                 </span>
                 <span id="drrValue">0%</span>
             </div>
