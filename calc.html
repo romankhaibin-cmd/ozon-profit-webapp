@@ -32,7 +32,7 @@
             display: flex; 
             align-items: center; 
             gap: 6px;
-            position: relative; /* для позиционирования подсказки */
+            position: relative;
         }
         .tooltip-icon {
             display: inline-flex;
@@ -50,13 +50,12 @@
             flex-shrink: 0;
             user-select: none;
             touch-action: manipulation;
-            /* Убираем псевдоэлементы, используем реальный элемент */
         }
         .tooltip-icon::before {
             content: 'i';
         }
 
-        /* Глобальный контейнер для всплывающей подсказки */
+        /* Глобальная подсказка */
         #tooltip-global {
             position: fixed;
             background: #333;
@@ -75,16 +74,15 @@
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.2s, visibility 0.2s;
-            pointer-events: none; /* чтобы клик проходил сквозь */
+            pointer-events: none;
             text-align: left;
         }
         #tooltip-global.visible {
             opacity: 1;
             visibility: visible;
-            pointer-events: auto; /* разрешаем клик, если нужно */
+            pointer-events: auto;
         }
 
-        /* Затемнение фона (опционально) */
         .tooltip-overlay {
             display: none;
             position: fixed;
@@ -338,7 +336,6 @@
         </div>
     </div>
 
-    <!-- Глобальный элемент подсказки -->
     <div id="tooltip-global"></div>
     <div class="tooltip-overlay" id="tooltipOverlay"></div>
 
@@ -347,67 +344,74 @@
         tg.expand();
         tg.ready();
 
-        // --- Управление подсказкой через JS ---
+        // --- Определение сенсорного устройства ---
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+        // --- Управление подсказкой ---
         const tooltipEl = document.getElementById('tooltip-global');
         const overlay = document.getElementById('tooltipOverlay');
+        let currentText = '';
+        let isOpen = false;
 
         function showTooltip(text, anchor) {
             if (!text) return;
+            currentText = text;
             tooltipEl.textContent = text;
             tooltipEl.classList.add('visible');
             overlay.classList.add('active');
+            isOpen = true;
             positionTooltip(anchor);
         }
 
         function hideTooltip() {
             tooltipEl.classList.remove('visible');
             overlay.classList.remove('active');
+            isOpen = false;
+            currentText = '';
+        }
+
+        function toggleTooltip(text, anchor) {
+            if (isOpen && tooltipEl.textContent === text) {
+                hideTooltip();
+            } else {
+                showTooltip(text, anchor);
+            }
         }
 
         function positionTooltip(anchor) {
             const rect = anchor.getBoundingClientRect();
-            const tooltipRect = tooltipEl.getBoundingClientRect(); // получаем размеры после установки текста (может быть скрыт, поэтому используем offsetWidth/Height)
-            // Так как элемент скрыт, его размеры могут быть 0, поэтому сначала сделаем видимым на мгновение, измерим, затем скорректируем.
-            // Лучше использовать getBoundingClientRect после добавления класса visible, но тогда будет мерцание.
-            // Можно временно сделать видимым с opacity:0, измерить, затем переместить.
-            // Для простоты используем scrollWidth/scrollHeight, но они работают только если элемент в DOM и не скрыт через display:none.
-            // Мы используем visibility:hidden + opacity:0, поэтому размеры доступны.
-            // Поэтому после установки текста и класса visible мы можем измерить.
-            // Но positionTooltip вызывается после showTooltip, когда класс уже добавлен, поэтому размеры известны.
-            const tw = tooltipEl.offsetWidth || 200; // запасное значение
+            const tw = tooltipEl.offsetWidth || 200;
             const th = tooltipEl.offsetHeight || 60;
 
             let left, top;
 
-            // Пробуем справа
+            // Справа
             let tryLeft = rect.right + 10;
             let tryTop = rect.top + rect.height/2 - th/2;
-            // Проверяем, помещается ли справа
             if (tryLeft + tw <= window.innerWidth) {
                 left = tryLeft;
                 top = tryTop;
             } 
-            // Если не помещается справа, пробуем слева
+            // Слева
             else if (rect.left - tw - 10 >= 0) {
                 left = rect.left - tw - 10;
                 top = rect.top + rect.height/2 - th/2;
             }
-            // Если не помещается ни справа, ни слева, пробуем сверху
+            // Сверху
             else if (rect.top - th - 10 >= 0) {
                 left = rect.left + rect.width/2 - tw/2;
                 top = rect.top - th - 10;
             }
-            // Иначе снизу
+            // Снизу
             else {
                 left = rect.left + rect.width/2 - tw/2;
                 top = rect.bottom + 10;
-                // Если снизу тоже не влезает, прижимаем к низу экрана
                 if (top + th > window.innerHeight) {
                     top = window.innerHeight - th - 10;
                 }
             }
 
-            // Дополнительная проверка на выход за границы по горизонтали
+            // Коррекция
             if (left < 0) left = 10;
             if (left + tw > window.innerWidth) left = window.innerWidth - tw - 10;
             if (top < 0) top = 10;
@@ -417,22 +421,30 @@
             tooltipEl.style.top = top + 'px';
         }
 
-        // Обработчики для иконок
-        document.querySelectorAll('.tooltip-icon').forEach(icon => {
+        // --- Обработчики для всех иконок ---
+        const icons = document.querySelectorAll('.tooltip-icon');
+
+        icons.forEach(icon => {
+            // Клик — всегда работает (для мобильных и десктопов)
             icon.addEventListener('click', function(e) {
                 e.stopPropagation();
                 const text = this.getAttribute('data-tooltip');
-                if (!text) return;
-                // Если подсказка уже видна и это та же иконка, скрываем
-                if (tooltipEl.classList.contains('visible') && tooltipEl.textContent === text) {
-                    hideTooltip();
-                    return;
-                }
-                showTooltip(text, this);
+                toggleTooltip(text, this);
             });
+
+            // Hover — только если не сенсорное устройство
+            if (!isTouchDevice) {
+                icon.addEventListener('mouseenter', function(e) {
+                    const text = this.getAttribute('data-tooltip');
+                    showTooltip(text, this);
+                });
+                icon.addEventListener('mouseleave', function(e) {
+                    hideTooltip();
+                });
+            }
         });
 
-        // Закрытие по клику вне подсказки (через оверлей)
+        // Закрытие по оверлею
         overlay.addEventListener('click', hideTooltip);
 
         // Закрытие по Escape
@@ -440,10 +452,10 @@
             if (e.key === 'Escape') hideTooltip();
         });
 
-        // При изменении размера окна скрываем подсказку (можно перепозиционировать, но проще скрыть)
+        // При изменении размера окна скрываем (или можно перепозиционировать, но проще скрыть)
         window.addEventListener('resize', hideTooltip);
 
-        // ---------- Остальная логика ----------
+        // ---------- Логика калькулятора ----------
         function showError(message) {
             const errorDiv = document.getElementById('error');
             errorDiv.textContent = '❌ ' + message;
