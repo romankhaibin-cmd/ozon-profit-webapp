@@ -37,8 +37,8 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 18px;
-            height: 18px;
+            width: 22px;
+            height: 22px;
             background: #3390ec;
             color: #fff;
             border-radius: 50%;
@@ -49,17 +49,17 @@
             position: relative;
             flex-shrink: 0;
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
-        /* "i" добавляется ТОЛЬКО через CSS */
         .tooltip-icon::before {
             content: 'i';
         }
         .tooltip-icon::after {
             content: attr(data-tooltip);
             position: absolute;
-            top: 0;
-            left: 100%;
-            margin-left: 8px;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
             background: #333;
             color: #fff;
             padding: 10px 14px;
@@ -80,21 +80,9 @@
             pointer-events: none;
         }
         .tooltip-icon:hover::after,
-        .tooltip-icon:active::after {
+        .tooltip-icon.active::after {
             opacity: 1;
             visibility: visible;
-        }
-        @media (max-width: 480px) {
-            .tooltip-icon::after {
-                position: fixed;
-                top: auto;
-                left: auto;
-                right: 8px;
-                margin-left: 0;
-                min-width: 180px;
-                max-width: calc(100vw - 16px);
-                z-index: 10000;
-            }
         }
         input { 
             width: 100%; padding: 14px; border: 1px solid #e0e0e0; 
@@ -253,7 +241,7 @@
         <button onclick="clearFields()" class="secondary">Очистить</button>
     </div>
     
-    <div class="loading" id="loading">⏳ Считаем...</div>
+    <div class="loading" id="loading"> Считаем...</div>
     <div class="error" id="error"></div>
     
     <div class="result" id="result" style="display: none;">
@@ -339,6 +327,32 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.ready();
+
+        // Обработка touch-событий для tooltip на мобильных
+        document.addEventListener('DOMContentLoaded', function() {
+            const tooltipIcons = document.querySelectorAll('.tooltip-icon');
+            tooltipIcons.forEach(function(icon) {
+                icon.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    // Убираем active у всех остальных
+                    tooltipIcons.forEach(function(otherIcon) {
+                        if (otherIcon !== icon) {
+                            otherIcon.classList.remove('active');
+                        }
+                    });
+                    // Переключаем active у текущей
+                    this.classList.toggle('active');
+                });
+            });
+            // Закрытие tooltip при касании вне его
+            document.addEventListener('touchstart', function(e) {
+                if (!e.target.classList.contains('tooltip-icon')) {
+                    tooltipIcons.forEach(function(icon) {
+                        icon.classList.remove('active');
+                    });
+                }
+            });
+        });
 
         function showError(message) {
             const errorDiv = document.getElementById('error');
