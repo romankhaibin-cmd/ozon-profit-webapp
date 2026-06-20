@@ -37,8 +37,8 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 22px;
-            height: 22px;
+            width: 18px;
+            height: 18px;
             background: #3390ec;
             color: #fff;
             border-radius: 50%;
@@ -49,17 +49,18 @@
             position: relative;
             flex-shrink: 0;
             user-select: none;
-            -webkit-tap-highlight-color: transparent;
         }
         .tooltip-icon::before {
             content: 'i';
         }
+        /* Позиционирование подсказки */
         .tooltip-icon::after {
             content: attr(data-tooltip);
-            position: absolute;
-            bottom: 130%;
-            left: 50%;
-            transform: translateX(-50%);
+            position: fixed;
+            top: auto;
+            left: auto;
+            right: auto;
+            bottom: auto;
             background: #333;
             color: #fff;
             padding: 10px 14px;
@@ -68,7 +69,7 @@
             font-style: normal;
             font-weight: normal;
             white-space: normal;
-            z-index: 1000;
+            z-index: 10000;
             min-width: 200px;
             max-width: 280px;
             text-align: left;
@@ -78,8 +79,12 @@
             visibility: hidden;
             transition: opacity 0.2s, visibility 0.2s;
             pointer-events: none;
+            /* Позиционируем относительно иконки */
+            transform: none;
         }
+        /* Показываем подсказку при наведении или нажатии */
         .tooltip-icon:hover::after,
+        .tooltip-icon:active::after,
         .tooltip-icon.active::after {
             opacity: 1;
             visibility: visible;
@@ -241,7 +246,7 @@
         <button onclick="clearFields()" class="secondary">Очистить</button>
     </div>
     
-    <div class="loading" id="loading"> Считаем...</div>
+    <div class="loading" id="loading">⏳ Считаем...</div>
     <div class="error" id="error"></div>
     
     <div class="result" id="result" style="display: none;">
@@ -328,24 +333,76 @@
         tg.expand();
         tg.ready();
 
-        // Обработка touch-событий для tooltip на мобильных
+        // Функция для обновления позиции подсказки
+        function updateTooltipPosition(icon) {
+            const tooltip = icon::after;
+            if (!tooltip) return;
+            
+            const rect = icon.getBoundingClientRect();
+            const tooltipWidth = 280; // max-width подсказки
+            const viewportWidth = window.innerWidth;
+            
+            // Вычисляем позицию
+            let left = rect.right + 10; // Справа от иконки с отступом
+            let top = rect.top;
+            
+            // Если не помещается справа, показываем слева
+            if (left + tooltipWidth > viewportWidth) {
+                left = rect.left - tooltipWidth - 10;
+            }
+            
+            // Если не помещается слева, показываем сверху
+            if (left < 10) {
+                left = rect.left;
+                top = rect.top - 100;
+            }
+            
+            // Ограничиваем по вертикали
+            if (top < 10) top = 10;
+            
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+        }
+
+        // Обработка touch-событий для мобильных
         document.addEventListener('DOMContentLoaded', function() {
             const tooltipIcons = document.querySelectorAll('.tooltip-icon');
+            
             tooltipIcons.forEach(function(icon) {
+                // Для десктопа - наведение
+                icon.addEventListener('mouseenter', function() {
+                    updateTooltipPosition(this);
+                });
+                
+                // Для мобильных - касание
                 icon.addEventListener('touchstart', function(e) {
                     e.preventDefault();
+                    e.stopPropagation();
+                    
                     // Убираем active у всех остальных
                     tooltipIcons.forEach(function(otherIcon) {
-                        if (otherIcon !== icon) {
+                        if (otherIcon !== this) {
                             otherIcon.classList.remove('active');
                         }
-                    });
+                    }, this);
+                    
                     // Переключаем active у текущей
                     this.classList.toggle('active');
-                });
+                    updateTooltipPosition(this);
+                }, {passive: false});
             });
+            
             // Закрытие tooltip при касании вне его
             document.addEventListener('touchstart', function(e) {
+                if (!e.target.classList.contains('tooltip-icon')) {
+                    tooltipIcons.forEach(function(icon) {
+                        icon.classList.remove('active');
+                    });
+                }
+            });
+            
+            // Закрытие при клике вне tooltip
+            document.addEventListener('click', function(e) {
                 if (!e.target.classList.contains('tooltip-icon')) {
                     tooltipIcons.forEach(function(icon) {
                         icon.classList.remove('active');
